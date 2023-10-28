@@ -1,6 +1,6 @@
-# Mongoose Query Builder
+# Mongoose Query Maker
 
-Mongoose Query Builder is a powerful tool for MongoDB with Mongoose that simplifies and enhances database querying. It provides a wide range of features for filtering, pagination, field selection, and population, making it easier to work with your MongoDB data.
+Mongoose Query Maker is a powerful tool for MongoDB with Mongoose that simplifies and enhances database querying. It provides a wide range of features for filtering, pagination, field selection, and population, making it easier to work with your MongoDB data.
 
 ## Features
 
@@ -12,10 +12,10 @@ Mongoose Query Builder is a powerful tool for MongoDB with Mongoose that simplif
 
 ## Installation
 
-You can install Mongoose Query Builder using npm:
+You can install Mongoose Query Maker using npm:
 
 ```bash
-npm install mongoose-query-builder
+npm install mongoose-query-maker
 ```
 
 For more detailed documentation and examples, please visit our GitHub repository.
@@ -32,4 +32,4 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 For questions, feedback, or support, please feel free to contact at [personal.sifat@gmail.com](mailto:personal.sifat@gmail.com).
 
-#### Thank you for using Mongoose Query Builder!
+#### Thank you for using Mongoose Query Maker!
