@@ -1,6 +1,23 @@
 {
   "name": "mongoose-query-builder",
   "version": "1.0.0",
+  "description": "A powerful query builder for MongoDB with Mongoose",
+  "author": {
+    "name": "SIFAT ULLAH",
+    "email": "personal.sifat@gmail.com",
+    "url": "https://www.sifatullahsu.com"
+  },
+  "keywords": [
+    "mongoose-query-builder",
+    "mongoose-query",
+    "query-builder",
+    "mongoose"
+  ],
+  "homepage": "https://github.com/sifatullahsu/mongoose-query-builder",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sifatullahsu/mongoose-query-builder.git"
+  },
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
