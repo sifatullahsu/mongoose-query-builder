@@ -1,28 +1,27 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import queryBuilder from './app/queryBuilder'
+import queryMaker from './app/queryMaker'
 import queryPagination from './app/queryPagination'
 import querySelector from './app/querySelector'
 import type {
   IDeselector,
-  IQueryBuilder,
-  IQueryBuilderFields,
+  IQueryMaker,
+  IQueryMakerFields,
+  IQueryOperations,
   IQueryPagination,
   IQuerySelector,
   IQuerySelectorFields,
-  ISelector,
   NestedKey
 } from './types'
 
 export {
   IDeselector,
-  IQueryBuilder,
-  IQueryBuilderFields,
+  IQueryMaker,
+  IQueryMakerFields,
+  IQueryOperations,
   IQueryPagination,
   IQuerySelector,
   IQuerySelectorFields,
-  ISelector,
   NestedKey,
-  queryBuilder,
+  queryMaker,
   queryPagination,
   querySelector
 }

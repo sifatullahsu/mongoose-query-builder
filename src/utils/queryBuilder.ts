@@ -3,7 +3,7 @@
 import { IAuthorizedFields, IQueryOperations, IReceviedQuery, IUser } from '../types'
 import valueMaker from './valueMaker'
 
-const queryMaker = (queryElements: IReceviedQuery, authorizedFields: IAuthorizedFields, user: IUser) => {
+const queryBuilder = (queryElements: IReceviedQuery, authorizedFields: IAuthorizedFields, user: IUser) => {
   const { all, filter } = authorizedFields
 
   // Initialize arrays to store query and authentication conditions
@@ -68,9 +68,13 @@ const queryMaker = (queryElements: IReceviedQuery, authorizedFields: IAuthorized
   }
 
   if ($and.length === 0 && all !== 'OPEN') {
-    const isAuthenticate = all.find(i => i === user?.role)
-    if (!isAuthenticate) {
+    if (all[0] === 'ANY' && !user) {
       throw new Error("Unauthorized access: 'user_role_access' is not permitted on the entire dataset")
+    } else {
+      const isAuthenticate = all.find(i => i === user?.role)
+      if (!isAuthenticate) {
+        throw new Error("Unauthorized access: 'user_role_access' is not permitted on the entire dataset")
+      }
     }
   }
 
@@ -81,4 +85,4 @@ const queryMaker = (queryElements: IReceviedQuery, authorizedFields: IAuthorized
   }
 }
 
-export default queryMaker
+export default queryBuilder

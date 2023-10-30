@@ -33,6 +33,10 @@ const valueMaker = (operation: IQueryOperations, value: string): unknown => {
     return value.split(',').map(Number)
   }
 
+  if (!isNaN(Number(value))) {
+    return Number(value)
+  }
+
   return value
 }
 
