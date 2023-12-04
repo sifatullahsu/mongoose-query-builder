@@ -73,8 +73,8 @@ export type IQueryOperations =
   | '$regex'
   | '$mod'
 
-export type IQueryAuthentication<T, R> = [R, T | T[] | 'OPEN'][] | [['ANY', T | T[] | 'OPEN']] | 'OPEN'
-// export type IQueryAuthentication<T, R> = 'OPEN' | [[R[], 'OPEN']] | [R[], T[]][]
+// export type IQueryAuthentication<T, R> = [R, T | T[] | 'OPEN'][] | [['ANY', T | T[] | 'OPEN']] | 'OPEN'
+export type IQueryAuthentication<T, R> = 'OPEN' | [R[], 'OPEN' | T[]][]
 
 // export from index.ts
 export type IQueryMakerFields<T extends Record<string, unknown>, R> = {

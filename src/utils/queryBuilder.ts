@@ -36,31 +36,29 @@ const queryBuilder = (queryElements: IReceviedQuery, authorizedFields: IAuthoriz
         throw new Error(`Unauthorized: '${operation}' on '${key}'`)
       }
 
-      // Check authentication rules
-      if (
-        authRules === 'OPEN' ||
-        (Array.isArray(authRules) &&
-          ((authRules[0][0] === 'ANY' && authRules[0][1] === 'OPEN' && user) ||
-            (authRules[0][0] === user?.role && authRules[0][1] === 'OPEN')))
-      ) {
-        // Add the query and authentication conditions
-        $and.push({ [key]: { [operation]: queryData } })
+      const actualQuery = { [key]: { [operation]: queryData } }
+
+      // Authentication rules
+      if (authRules === 'OPEN') {
+        $and.push(actualQuery)
       } else if (!user) {
-        // Unauthorized if user is not logged in
         throw new Error(`Unauthorized: 'required_registered_user' on '${key}'`)
       } else {
         // Find the specific authentication rule based on user role
-        const authInfo = authRules.find((x: string) => x[0] === user.role || x[0] === 'ANY')
+        const authInfo = authRules.find((x: string) => x[0].includes(user.role))
 
         // Unauthorized if no matching role-based access
         if (!authInfo) throw new Error(`Unauthorized: 'user_role_access' on '${key}'`)
 
-        $and.push(
-          { [key]: { [operation]: queryData } },
-          Array.isArray(authInfo[1])
-            ? { $or: authInfo[1].map(x => ({ [x]: { $eq: user._id } })) }
-            : { [authInfo[1]]: { $eq: user._id } }
-        )
+        $and.push(actualQuery)
+
+        if (Array.isArray(authInfo[1])) {
+          $and.push(
+            authInfo[1].length > 1
+              ? { $or: authInfo[1].map(x => ({ [x]: { $eq: user._id } })) }
+              : { [authInfo[1][0]]: { $eq: user._id } }
+          )
+        }
       }
     }
   }
