@@ -24,13 +24,12 @@ const queryMaker = (
   const queryElements = objectPicker(receviedQuery, keys)
 
   // Step 3: Final query, pagination, selector
-  const { query, authentication } = queryBuilder(queryElements, authorizedFields, user)
+  const { query } = queryBuilder(queryElements, authorizedFields, user)
   const pagination = queryPagination(receviedQuery)
   const selector = querySelector(receviedQuery, authorizedSelector)
 
   return {
     query,
-    authentication,
     pagination,
     selector
   }

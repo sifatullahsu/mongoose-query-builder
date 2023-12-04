@@ -6,9 +6,8 @@ import valueMaker from './valueMaker'
 const queryBuilder = (queryElements: IReceviedQuery, authorizedFields: IAuthorizedFields, user: IUser) => {
   const { all, filter } = authorizedFields
 
-  // Initialize arrays to store query and authentication conditions
+  // Initialize arrays to store query conditions
   const $and: Record<string, any>[] = []
-  const authentication: Record<string, any>[] = []
 
   // Loop through query elements provided
   for (const [key, values] of Object.entries(queryElements)) {
@@ -38,31 +37,30 @@ const queryBuilder = (queryElements: IReceviedQuery, authorizedFields: IAuthoriz
       }
 
       // Check authentication rules
-      if (authRules === 'OPEN' || (Array.isArray(authRules) && authRules[0] === 'ANY' && user)) {
+      if (
+        authRules === 'OPEN' ||
+        (Array.isArray(authRules) &&
+          ((authRules[0][0] === 'ANY' && authRules[0][1] === 'OPEN' && user) ||
+            (authRules[0][0] === user?.role && authRules[0][1] === 'OPEN')))
+      ) {
         // Add the query and authentication conditions
         $and.push({ [key]: { [operation]: queryData } })
-        authentication.push({ [key]: { [operation]: queryData } })
       } else if (!user) {
         // Unauthorized if user is not logged in
         throw new Error(`Unauthorized: 'required_registered_user' on '${key}'`)
       } else {
         // Find the specific authentication rule based on user role
-        const authInfo = authRules.find((x: string) => x[0] === user.role)
+        const authInfo = authRules.find((x: string) => x[0] === user.role || x[0] === 'ANY')
 
-        if (authInfo) {
-          if (authInfo[1] === 'OPEN') {
-            // Add the query and authentication conditions
-            $and.push({ [key]: { [operation]: queryData } })
-            authentication.push({ [key]: { [operation]: queryData } })
-          } else {
-            // Add user-specific authentication conditions
-            $and.push({ [key]: { [operation]: queryData } }, { [authInfo[0]]: { $eq: user._id } })
-            authentication.push({ [authInfo[0]]: { $eq: user._id } })
-          }
-        } else {
-          // Unauthorized if no matching role-based access
-          throw new Error(`Unauthorized: 'user_role_access' on '${key}'`)
-        }
+        // Unauthorized if no matching role-based access
+        if (!authInfo) throw new Error(`Unauthorized: 'user_role_access' on '${key}'`)
+
+        $and.push(
+          { [key]: { [operation]: queryData } },
+          Array.isArray(authInfo[1])
+            ? { $or: authInfo[1].map(x => ({ [x]: { $eq: user._id } })) }
+            : { [authInfo[1]]: { $eq: user._id } }
+        )
       }
     }
   }
@@ -80,8 +78,7 @@ const queryBuilder = (queryElements: IReceviedQuery, authorizedFields: IAuthoriz
 
   // Return the final query and authentication conditions
   return {
-    query: $and.length === 0 ? {} : { $and },
-    authentication
+    query: $and.length === 0 ? {} : $and.length === 1 ? $and[0] : { $and }
   }
 }
 
