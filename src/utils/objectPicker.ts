@@ -1,6 +1,6 @@
-type IType = <T extends Record<string, unknown>, K extends keyof T>(obj: T, keys: K[]) => Partial<T>
+type TObjectPicker = <T extends Record<string, unknown>, K extends keyof T>(obj: T, keys: K[]) => Partial<T>
 
-const objectPicker: IType = (obj, keys) => {
+export const objectPicker: TObjectPicker = (obj, keys) => {
   const finalObj: Partial<typeof obj> = {}
 
   for (const key of keys) {
@@ -10,5 +10,3 @@ const objectPicker: IType = (obj, keys) => {
   }
   return finalObj
 }
-
-export default objectPicker

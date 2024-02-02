@@ -1,6 +1,6 @@
-import { IQueryOperations } from '../types'
+import { Operations } from '../types'
 
-const valueMaker = (operation: IQueryOperations, value: string): unknown => {
+export const valueModifier = (operation: Operations, value: string): unknown => {
   if (operation === ('$in' || '$nin' || '$all')) {
     return value.split(',')
   }
@@ -39,5 +39,3 @@ const valueMaker = (operation: IQueryOperations, value: string): unknown => {
 
   return value
 }
-
-export default valueMaker

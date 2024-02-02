@@ -1,63 +1,43 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-// export from index.ts
-export type IQueryMaker = {
-  query: Record<string, any>
-  pagination: IQueryPagination
-  selector: IQuerySelector
-}
-
-// export from index.ts
-export type IQueryPagination = {
+export type Pagination = {
   page: number
   limit: number
   skip: number
   sort: string
 }
 
-// export from index.ts
-export type IQuerySelector = {
-  select: string
-  populate: IPopulate[]
+export type Populate = {
+  path: string
+  select: Select
+  populate: Populate[]
 }
 
-export type IPopulate = { path: string; select: string; populate: IPopulate[] }
+export type Query = Record<string, any>
 
-export type IReceviedQuery = Record<string, unknown>
+export type Select = string
 
-export type IUser = {
+export type QueryMaker = {
+  query: Query
+  select: Select
+  populate: Populate[]
+  pagination: Pagination
+}
+
+export type QuerySelector = {
+  select: Select
+  populate: Populate[]
+}
+
+export type User = {
   _id: string
   role: string
   [key: string]: any
 } | null
 
-export type ISelector = {
-  select: string[]
-  populate: [string, string[]][]
-}
+export type ReqQuery = Record<string, unknown>
 
-// export from index.ts
-export type IDeselector = Record<string, string[]>
-
-// export from index.ts
-export type IQuerySelectorFields = {
-  select: string[]
-  populate: [string, string[]][]
-}
-
-// export from index.ts
-export type NestedKey<O extends Record<string, unknown>, ProcessedKeys extends string = ''> = {
-  [K in Extract<keyof O, string>]: K extends ProcessedKeys
-    ? K // If the key has already been processed, stop recursion
-    : O[K] extends Array<Record<string, unknown>>
-    ? `${K}` | `${K}.${NestedKey<O[K][number], `${ProcessedKeys},${K}`>}`
-    : O[K] extends Record<string, unknown>
-    ? `${K}` | `${K}.${NestedKey<O[K], `${ProcessedKeys},${K}`>}`
-    : K
-}[Extract<keyof O, string>]
-
-// export from index.ts
-export type IQueryOperations =
+export type Operations =
   | '$eq'
   | '$ne'
   | '$gt'
@@ -73,13 +53,43 @@ export type IQueryOperations =
   | '$regex'
   | '$mod'
 
-// export type IQueryAuthentication<T, R> = [R, T | T[] | 'OPEN'][] | [['ANY', T | T[] | 'OPEN']] | 'OPEN'
-export type IQueryAuthentication<T, R> = 'OPEN' | [R[], 'OPEN' | T[]][]
+export type NestedKey<O extends Record<string, unknown>, ProcessedKeys extends string = ''> = {
+  [K in Extract<keyof O, string>]: K extends ProcessedKeys
+    ? K
+    : O[K] extends Array<Record<string, unknown>>
+    ? `${K}` | `${K}.${NestedKey<O[K][number], `${ProcessedKeys},${K}`>}`
+    : O[K] extends Record<string, unknown>
+    ? `${K}` | `${K}.${NestedKey<O[K], `${ProcessedKeys},${K}`>}`
+    : K
+}[Extract<keyof O, string>]
 
-// export from index.ts
-export type IQueryMakerFields<T extends Record<string, unknown>, R> = {
-  all: 'OPEN' | R[] | ['ANY']
-  filter: [NestedKey<T>, IQueryOperations[], IQueryAuthentication<NestedKey<T>, R>][]
+export type MakerFields<T extends Record<string, unknown>, R> = {
+  all: 'OPEN' | R[]
+  filter: [NestedKey<T>, Operations[], 'OPEN' | [R[], 'OPEN' | NestedKey<T>[]][]][]
 }
 
-export type IAuthorizedFields = { all: 'OPEN' | string[]; filter: any[][] }
+export type SelectorFields<T extends Record<string, unknown>> = {
+  select: NestedKey<T>[]
+  populate: [string, string[]][]
+}
+
+// --- For Internal Use Only --- //
+type TMakerFields = {
+  all: 'OPEN' | string[]
+  filter: [string, Operations[], 'OPEN' | [string[], 'OPEN' | string[]][]][]
+}
+type TSelectorFields = {
+  select: string[]
+  populate: [string, string[]][]
+}
+export type TPagination = (q: ReqQuery) => Pagination
+export type TPopulate = (input: string | string[], authorized: TSelectorFields['populate']) => Populate[]
+export type TSelect = (input: string, exclude: TSelectorFields['select']) => Select
+export type TQuery = (elements: ReqQuery, user: User, authorized: TMakerFields) => Query
+export type TQueryMaker = (
+  q: ReqQuery,
+  user: User,
+  makerFields: TMakerFields,
+  selectorFields: TSelectorFields
+) => QueryMaker
+export type TQuerySelector = (q: ReqQuery, selectorFields: TSelectorFields) => QuerySelector
