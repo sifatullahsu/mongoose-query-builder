@@ -63,7 +63,7 @@ export type NestedKey<O extends Record<string, unknown>, ProcessedKeys extends s
     : K
 }[Extract<keyof O, string>]
 
-export type MakerFields<T extends Record<string, unknown>, R> = {
+export type FilterFields<T extends Record<string, unknown>, R> = {
   all: 'OPEN' | R[]
   filter: [NestedKey<T>, Operations[], 'OPEN' | [R[], 'OPEN' | NestedKey<T>[]][]][]
 }
@@ -74,7 +74,7 @@ export type SelectorFields<T extends Record<string, unknown>> = {
 }
 
 // --- For Internal Use Only --- //
-type TMakerFields = {
+type TFilterFields = {
   all: 'OPEN' | string[]
   filter: [string, Operations[], 'OPEN' | [string[], 'OPEN' | string[]][]][]
 }
@@ -85,11 +85,11 @@ type TSelectorFields = {
 export type TPagination = (q: ReqQuery) => Pagination
 export type TPopulate = (input: string | string[], authorized: TSelectorFields['populate']) => Populate[]
 export type TSelect = (input: string, exclude: TSelectorFields['select']) => Select
-export type TQuery = (elements: ReqQuery, user: User, authorized: TMakerFields) => Query
+export type TQuery = (elements: ReqQuery, user: User, authorized: TFilterFields) => Query
 export type TQueryMaker = (
   q: ReqQuery,
   user: User,
-  makerFields: TMakerFields,
+  filterFields: TFilterFields,
   selectorFields: TSelectorFields
 ) => QueryMaker
 export type TQuerySelector = (q: ReqQuery, selectorFields: TSelectorFields) => QuerySelector

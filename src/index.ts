@@ -3,7 +3,7 @@ import { populate } from './app/populate'
 import { query } from './app/query'
 import { select } from './app/select'
 import {
-  MakerFields,
+  FilterFields,
   Pagination,
   Populate,
   Query,
@@ -15,9 +15,9 @@ import {
   TQuerySelector
 } from './types'
 
-const queryMaker: TQueryMaker = (q, user, makerFields, selectorFields) => {
+const queryMaker: TQueryMaker = (q, user, filterFields, selectorFields) => {
   return {
-    query: query(q, user, makerFields),
+    query: query(q, user, filterFields),
     select: select(q.select as string, selectorFields.select),
     populate: populate(q.populate as string | string[], selectorFields.populate),
     pagination: pagination(q)
@@ -32,7 +32,7 @@ const querySelector: TQuerySelector = (q, selectorFields) => {
 }
 
 export {
-  MakerFields,
+  FilterFields,
   Pagination,
   Populate,
   Query,
