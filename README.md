@@ -1,6 +1,6 @@
 # Mongoose Query Maker
 
-Mongoose Query Maker is a powerful tool for MongoDB with Mongoose that simplifies and enhances database querying. It provides a wide range of features for filtering, pagination, field selection, and population, making it easier to work with your MongoDB data.
+Mongoose Query Maker is a powerful tool for MongoDB with Mongoose that simplifies and enhances database querying. It provides a wide range of features for filtering, pagination, field selection, and population, making it easier to work with your MongoDB data. It seamlessly integrates with Mongoose for a smooth development experience.
 
 ## Features
 
@@ -8,7 +8,6 @@ Mongoose Query Maker is a powerful tool for MongoDB with Mongoose that simplifie
 - **Pagination:** Implement pagination for large data sets with simple configuration.
 - **Field Selection:** Choose which fields to include or exclude in query results.
 - **Population:** Populate related data for a comprehensive view of your documents.
-- **Mongoose Integration:** Seamlessly integrates with Mongoose for a smooth development experience.
 
 ## Installation
 
@@ -16,6 +15,10 @@ You can install Mongoose Query Maker using npm:
 
 ```bash
 npm install mongoose-query-maker
+```
+
+```bash
+yarn add mongoose-query-maker
 ```
 
 ## Query Parameters
@@ -56,9 +59,7 @@ To execute filter queries, use the `$and` condition, specifying each filter oper
   Query Output:
 
   ```json
-  {
-    "$and": [{ "category": { "$eq": "646c817b303ae9cca93ad11b" } }]
-  }
+  { "category": { "$eq": "646c817b303ae9cca93ad11b" } }
   ```
 
 - Combine multiple filter operations to refine your query:
@@ -90,9 +91,7 @@ To execute filter queries, use the `$and` condition, specifying each filter oper
   Query Output:
 
   ```json
-  {
-    "$and": [{ "category": { "$in": ["value1", "value2", "value3"] } }]
-  }
+  { "category": { "$in": ["value1", "value2", "value3"] } }
   ```
 
 - Support for Any Regular Expression:
@@ -106,9 +105,7 @@ To execute filter queries, use the `$and` condition, specifying each filter oper
   Query Output:
 
   ```json
-  {
-    "$and": [{ "description": { "$regex": new RegExp("pattern", "flags") } }]
-  }
+  { "description": { "$regex": new RegExp("pattern", "flags") } }
   ```
 
 If no authorized query parameter is provided, the query output will be an empty object `{}`. Filter operations are authorized based on specific criteria, including accessibility for different user roles, which will be discussed later in this documentation.
@@ -209,148 +206,115 @@ Note: It's optional to select specific fields during population. If no fields ar
 
 For more detailed documentation and examples, please visit our GitHub repository.
 
-## `1) queryMaker()` Implementation
+## Core Elements
 
-**Description:** The `queryMaker` function is a powerful tool for building and executing complex MongoDB queries. It allows you to filter, select, and populate data based on specified criteria. With the ability to handle various filter operations, field selection, and population, this function provides extensive control over your data queries.
+- **Functions**
 
-- ### **Step 1: Defining Authorized Fields**
+  - `queryMaker`: The queryMaker function is a versatile tool designed to handle filtering, pagination, field selection, and population in MongoDB queries.
+  - `querySelector`: The querySelector function is specialized in handling field selection and population in MongoDB queries.
+
+- **TypeScript Types**
+
+  - `AuthRules`: It's a generic type designed to enhance the security of filtering based on user roles. The first parameter is the mongoose schema interface, and the second parameter is the user role. This type assists in defining and enforcing filtering rules securely within your application.
+  - `SelectorRules` - It's another generic type focused on field selection. It accepts only a mongoose schema interface as its parameter. This type is useful for specifying and enforcing field selection rules within the context of your application.
+
+### `queryMaker()`
+
+**Description:** The `queryMaker` function is a powerful tool for building and executing complex MongoDB queries. It allows you to filter, select, populate, and paginate data based on specified criteria. With the ability to handle various filter operations, field selection, population, and pagination, this function provides extensive control over your data queries.
+
+- #### **Step 1: Extract User Information From Token**
+
+  The `queryMaker` function does not process JWT tokens directly. Instead, you are responsible for extracting user information, such as the user's `_id` and `role` from the token outside the function's scope. When passing user information as arguments to the `queryMaker` function, ensure that the token includes the user's `_id` and `role` if the user is authenticated. In cases where the user is not authenticated, the token can be set to `null`.
 
   ```typescript
-  const serviceAuthorizedFields: IQueryMakerFields<iService, iRole> = {
-    all: 'OPEN',
-    filter: [
-      ['category', ['$eq', '$in'], 'OPEN'],
-      ['mentor', ['$eq'], 'OPEN'],
-      ['status', ['$eq'], 'OPEN'],
-      ['packages.price', ['$gt', '$gte', '$lt', '$lte'], 'OPEN'],
-      ['title', ['$regex'], 'OPEN']
+  // Example user object, or pass 'null'
+  { _id: "", role: "", ...} || null
+  ```
+
+- #### **Step 2: Defining AuthRules**
+
+  ```typescript
+  // Example 01
+  const serviceAuthRules: AuthRules<IService, IRole> = {
+    authentication: 'OPEN',
+    permission: [
+      ['category', ['$eq', '$ne']],
+      ['mentor', ['$eq']],
+      ['status', ['$eq']],
+      ['packages.price', ['$gt', '$gte', '$lt', '$lte']],
+      ['title', ['$regex']]
+    ]
+  }
+
+  // Example 02
+  const serviceAuthRules: AuthRules<IService, IRole> = {
+    authentication: [
+      [['admin', 'super_admin'], 'OPEN'],
+      [['seller'], ['sellerId']],
+      [['mentor'], ['mentorId', 'userId']]
+    ],
+    permission: [
+      ['category', ['$eq', '$ne']],
+      ['mentor', ['$eq']],
+      ['status', ['$eq']],
+      ['packages.price', ['$gt', '$gte', '$lt', '$lte']],
+      ['title', ['$regex']]
     ]
   }
   ```
 
-  - `all`: This key specifies which fields are open for access and the associated authentication criteria. It can take one of the following values:
+  - `authentication`: This field defines the authentication process for querying or filtering data, establishing rules for document access. It encompasses open-to-all, user-role-based, and user-based scenarios. The following rules delineate the authentication process:
 
-    - `'OPEN'`: When set to `'OPEN'`, it means the fields are open for everyone, and query execution does not involve any role-based checking. These fields can be accessed without any restrictions.
-
-    - `Array of User Role` Strings: When provided as an array of user role strings, the `all` key ensures that role-based checking occurs for fields if the query result is an empty object (`{}`). It checks whether the user holds a valid role to access the fields. This setting allows for controlled access based on user roles, ensuring secure data filtering.
-
-    - `['ANY']`: The use of `['ANY']` signifies that the fields are accessible exclusively for registered users. It restricts access to only those with valid user accounts, offering an added layer of control.
-
-    This flexibility in the `all` key allows you to define the level of access control for fields based on your specific requirements, whether they are open to all or restricted to specific user roles.
-
-  - `filter`: This key is an array of tuples, each containing three elements to define the filtering behavior for specific fields when using query parameters in your API requests:
-
-    - **Field Name (String):** The first element is a string representing the key of the schema interface for a specific field in your Mongoose model. This field is allowed to be used as a query parameter in API requests for filtering.
-
-    - **Allowed Operations (Array of Strings):** The second element is an array of strings specifying the allowed query operations for filtering. If a request uses an operation not listed in this array, an error will be thrown. Operation can be, `$eq`, `$ne`, `$gt`, `$gte`, `$lt`, `$lte`, `$in`, `$nin`, `$all`, `$size`, `$exists`, `$type`, `$regex`, `$mod` which we already discussed earlier.
-
-    - **Authentication Rules (Array of Tuples) / string "OPEN":** The third element is an array of tuples / string "OPEN" that define the authentication rules for the query. It determines who has access to filter by the specified field based on the following cases:
-
-      - **Case 01: Open for All (No Authentication Required):** Use `OPEN` to indicate that no authentication is required for this field.
-
-      - **Case 02: Open for Any Authenticated/Registered User:** Use `[ ['ANY', 'OPEN'] ]` to check whether the user has a valid token. If a valid token is present, the field is open for filtering.
-
-      - **Case 03 & 04: Role-Based Authentication:** Role-based authentication allows you to specify user roles that have access to filter the field:
-
-        For Case 03, specify the roles (e.g., 'super_admin', 'admin') for which the field is open, or combine roles in a single tuple.
-
-        For Case 04, specify the roles and the field name to be checked against the user's ID. If the user's role matches and the user's ID matches the specified field, the field is open for filtering.
-
-      **Note:** Case 03 and Case 04 can be combined, enabling fine-grained control over field access based on roles and user IDs.
-
-    **Example 01:**
-
-    ```typescript
-    const serviceAuthorizedFields: IQueryMakerFields<iService, iRole> = {
-      all: ['admin'],
-      filter: [
-        [
-          'category',
-          ['$eq', '$in'],
-          [
-            ['admin', 'OPEN'],
-            ['mentor', 'mentor_id']
-          ]
-        ]
-      ]
-    }
-    ```
-
-    **For 'admin':**
-
-    - The 'category' field allows two filter operations: '$eq' and '$in'.
-
-    - Authentication rules for 'category' specify the following:
-
-      For 'admin' users, the field is open `['admin', 'OPEN']`, meaning any 'admin' user can use the '$eq' and '$in' operations to filter the 'category' field without any additional checks.
+    - **Open Access for All**: When set to the string `'OPEN'`, it indicates that the fields are open to everyone. Query execution does not involve role-based or user-based checking, allowing unrestricted access to the entire database collection. For example, if filtering the collection by the category according to above "Example 01", the query would look like this:
 
       ```json
-      {
-        "$and": [{ "category": { "$eq": "646c817b303ae9cca93ad11b" } }]
-      }
+      { "category": { "$eq": "646c817b303ae9cca93ad11b" } }
       ```
 
-    **For 'mentor':**
+    - **User-Role-Based Authentication**: Role-based authentication allows you to specify user roles that have access to query or filter the data. Use `[ [['role1', ...], 'OPEN'], ...]` to check whether the user has a valid token. If a valid token is present, the collection is open for querying or filtering; otherwise, it'll throw an unauthorized error. For example, with the following configuration on "Example 02" `[[['admin', 'super_admin'], 'OPEN'], ...]`, where "admin" and "super_admin" have role-based access. If filtering the collection by the category as an "admin" or "super_admin" would result in the query:
 
-    - The 'category' field allows the same filter operations: '$eq' and '$in'.
+      ```json
+      { "category": { "$eq": "646c817b303ae9cca93ad11b" } }
+      ```
 
-    - Authentication rules for 'category' also specify the following:
-
-      For 'mentor' users, access to the field is conditional `['mentor', 'mentor_id']` upon their 'mentor_id' matching the user's ID extracted from the token. In other words, 'mentor' users can utilize the '$eq' and '$in' operations to filter the 'category' field. However, the query includes an additional condition that checks whether the 'mentor_id' matches the user's ID, ensuring that the filtered results include only documents where their 'mentor_id' is associated with their specific user ID.
+    - **User-Based Authentication**: User-based authentication allows you to verify whether the user owns or has permission to access a document. The document should include the user `_id` in any of the specified fields. To implement this, use the following format: `[ [['role1', ...], ['field1', ...]], ...]` to check for the user \_id in any of these fields. It employs a $or operation for multiple fields and adds the user \_id without $or for a single field. For example, with the following configuration on "Example 02" `[[['seller'], ['sellerId']], ...]`, if filtering the collection by the category as a "seller" would result in the query:
 
       ```json
       {
         "$and": [
           { "category": { "$eq": "646c817b303ae9cca93ad11b" } },
-          { "mentor_id": { "$eq": "userIdFromToken" } }
+          { "sellerId": { "$eq": "sellerUserIdFromToken" } }
         ]
       }
       ```
 
-      This means that 'mentor' users can filter the 'category' field, and the query dynamically incorporates their user ID and the specified field ('mentor_id') to guarantee that the results are limited to documents where their 'mentor_id' matches their extracted user ID from the token. This additional condition adds a layer of data security and access control for 'mentor' users.
+      Similarly, if present in multiple fields, with the configuration on "Example 02" `[[['mentor'], ['mentorId', 'userId']], ...]`, if filtering the collection by the category as a "mentor" would result in the query:
 
-    **Example 02:**
+      ```json
+      {
+        "$and": [
+          { "category": { "$eq": "646c817b303ae9cca93ad11b" } },
+          {
+            "$or": [
+              { "mentorId": { "$eq": "mentorUserIdFromToken" } },
+              { "userId": { "$eq": "mentorUserIdFromToken" } }
+            ]
+          }
+        ]
+      }
+      ```
 
-    ```typescript
-    const serviceAuthorizedFields: IQueryMakerFields<iService, iRole> = {
-      all: 'OPEN',
-      filter: [['category', ['$eq', '$in'], 'OPEN']]
-    }
-    ```
+  - `permission`: The filter parameter is a set of rules that define secure filtering behavior when using query parameters in your API requests. It is structured as an array of tuples, each containing two elements. These tuples specify the filtering behavior for specific fields, ensuring secure and controlled filtering in your MongoDB queries.
 
-    In this example, the `serviceAuthorizedFields` configuration is defined with access control and filtering rules for the "category" field of a service.
+    - **Field Name (String):** The first element is a string representing the key of the schema interface for a specific field in your Mongoose model. This field is allowed to be used as a query parameter in API requests for filtering.
 
-    - The `all` property is set to `'OPEN'`, allowing access for unauthenticated users and those with roles specified in the configuration.
+    - **Allowed Operations (Array of Strings):** The second element is an array of strings specifying the allowed query operations for filtering. If a request uses an operation not listed in this array, an error will be thrown. Operation can be, `$eq`, `$ne`, `$gt`, `$gte`, `$lt`, `$lte`, `$in`, `$nin`, `$all`, `$size`, `$exists`, `$type`, `$regex`, `$mod` which we already discussed earlier.
 
-    - In the `filter` array, the third parameter of the tuple for the "category" field is also set to `'OPEN,'` indicating that anyone, whether authenticated or not, can access and filter data using the "category" field.
-
-    This configuration ensures that the "category" field is accessible to both authenticated and unauthenticated users. Additionally, if no valid filtration criteria are provided in a request, the configuration checks if the field is publicly open according to the `'OPEN'` property or based on roles with permission.
-
-    **Example 03:**
-
-    ```typescript
-    const serviceAuthorizedFields: IQueryMakerFields<iService, iRole> = {
-      all: ['ANY'],
-      filter: [['category', ['$eq', '$in'], [['ANY', 'OPEN']]]]
-    }
-    ```
-
-    In this example, the `serviceAuthorizedFields` configuration defines explicit access control and filtering rules for the "category" field of a service.
-
-    - The `all` property is set to `['ANY']`, indicating that requested users must be authenticated to access and filter data. Only authenticated users with valid tokens are allowed to use this field for filtering.
-
-    - In the `filter` array, the third parameter of the tuple for the "category" field is specified as `['ANY', 'OPEN']`. This means that the filter is eligible only for authenticated users. Specifically, users who are authenticated with valid tokens, regardless of their role, can access and filter data using the "category" field.
-
-    This configuration provides a fine-grained approach to access control, allowing specific access and filtering permissions for each field. It ensures that only authenticated users can utilize this filter and access data securely.
-
-- ### **Step 2: Extract User Information From Token**
-
-  The `queryMaker` function does not process JWT tokens directly. Instead, you are responsible for extracting user information, such as the user's `_id` and `role`, from the token outside the function's scope. When passing user information as arguments to the `queryMaker` function, ensure that the token includes the user's `_id` and `role` if the user is authenticated. In cases where the user is not authenticated, the token can be set to `null`.
-
-- ### **Step 3: Defining Authorized Selector Fields**
+- #### **Step 3: Defining SelectorRules**
 
   ```typescript
-  const serviceAuthorizedSelectorFields: IQuerySelectorFields = {
+  // Example 03
+  const serviceSelectorRules: SelectorRules<IService> = {
     select: [],
     populate: [
       ['mentor', ['password']],
@@ -361,7 +325,7 @@ For more detailed documentation and examples, please visit our GitHub repository
   }
   ```
 
-  The `serviceAuthorizedSelectorFields` configuration defines authorized selector fields for controlling the selection and population of specific document attributes in the query results.
+  The `serviceSelectorRules` configuration defines authorized selector fields for controlling the selection and population of specific document attributes in the query results.
 
   - The `select` key is an array that specifies which fields are not allowed to be queried using the `select` query parameter. It is used to restrict the selection of specific document attributes in the query results. For instance, on a user collection, the "password" field is an essential document attribute that should not be accessible through query parameters. By adding "password" to the `select` array, you prevent it from being queried and retrieved. It's important to note that for fields you do not want to share, you should also set them as `"select: false"` in your schema. This ensures that these fields are not accessible from the query.
 
@@ -394,79 +358,35 @@ For more detailed documentation and examples, please visit our GitHub repository
   Rest assured that despite the lack of automatic key suggestions, the Mongoose Query Maker allows you to configure "select" and "populate" fields effectively, granting you fine-grained control over query results and data retrieval.
 
 ```typescript
-const serviceAuthorizedFields: IQueryMakerFields<iService, iRole> = {
-  all: 'OPEN',
-  filter: [
-    ['category', ['$eq', '$in'], 'OPEN'],
-    ['mentor', ['$eq'], 'OPEN'],
-    ['status', ['$eq'], 'OPEN'],
-    ['packages.price', ['$gt', '$gte', '$lt', '$lte'], 'OPEN'],
-    ['title', ['$regex'], 'OPEN']
-  ]
-}
-
-const serviceSelectorFields: IQuerySelectorFields = {
-  select: [],
-  populate: [
-    ['mentor', ['password']],
-    ['category', []],
-    ['topics', []],
-    ['topics.category', []]
-  ]
-}
-
 const getAllServices = async (req: Request, res: Response, next: NextFunction) => {
-  const data = queryMaker(req.query, req.user, serviceAuthorizedFields, serviceSelectorFields)
+  const queryResult = queryMaker(req.query, req.user, serviceAuthRules, serviceSelectorRules)
 
-  const { query, pagination, selector } = data
+  const { query, pagination, select, populate } = queryResult
   const { page, limit, skip, sort } = pagination
-  const { select, populate } = selector
 
-  const result = await Service.find(query)
-    .select(select)
-    .skip(skip)
-    .limit(limit)
-    .sort(sort)
-    .populate(populate)
+  const result = await Service.find(query, select, { limit, skip, sort, populate })
 
   res.send(result)
 }
 ```
 
-## `2) queryPagination()` Implementation
+### `querySelector()`
 
-The "queryPagination" function is designed to streamline the pagination process for your queries. It takes the "req.query" object received from an Express request and processes pagination parameters such as "page," "limit," and "sort."
+**Description:** The `querySelector` function is a powerful tool. It allows you to select, and populate data based on specified criteria. This function exact do the same what `queryMaker` does. The key difference is less features.
 
-**Key Functionality:**
+- `queryMaker`: filter, select, populate, and paginate
+- `querySelector`: select, and populate
 
-- **Page**: It determines the current page number for paginating query results.
-- **Limit**: Specifies the number of items to be displayed per page, allowing fine-grained control over result granularity.
-- **Skip**: Calculates the number of items to skip in the database query, ensuring data retrieval starts from the correct position.
-- **Sort**: Defines the order in which data is presented, making it easier to organize and understand query results.
+```typescript
+const getSingleService = async (req: Request, res: Response, next: NextFunction) => {
+  const queryResult = querySelector(req.query, serviceSelectorRules)
+  const { select, populate } = queryResult
 
-The "queryPagination" function simplifies the handling of pagination parameters, ensuring that your data is presented in an organized and user-friendly manner. Default values for pagination parameters, as discussed in the documentation, are automatically applied, further enhancing the efficiency of data retrieval.
+  const result = await Service.findById(req.params.id, select, { populate })
 
-## `3) querySelector()` Implementation
-
-The "querySelector" function plays a crucial role in defining the fields that can be selected and populated in your queries. Much like the "queryMaker" function, it processes the "req.query" object received from an Express request, as well as the "AuthorizedSelectorFields" configuration, to facilitate the selection and population of fields.
-
-**Key Functionality:**
-
-- **Select Fields**: This function allows you to specify which fields can be selected, providing fine-grained control over the data to include or exclude in query results.
-
-- **Populate Fields**: Similar to field selection, the "querySelector" function also governs which fields can be populated. You can specify which fields are eligible for population, helping manage nested and related data.
-
-- **Exclusion Rules**: Fields that should not be shared with the frontend can be defined, ensuring that sensitive or unnecessary data remains protected. The "select:false" configuration is essential for excluding fields from the query results.
-
-The "querySelector" function enhances your ability to tailor the results of your queries by providing options for field selection and population. It helps ensure that data retrieval aligns with your application's requirements and data privacy considerations.
-
-### **Note:**
-
-- "querySelector" is typically employed when you specifically want to control the select and populate functionality in your queries. It provides the means to fine-tune field selection and population as required for your application.
-
-- On the other hand, "queryPagination" is used primarily for managing pagination data within your queries. If your main focus is on controlling how data is paginated, this function simplifies the process.
-
-- However, for a comprehensive solution that covers all aspects of query creation, including filtering, pagination, field selection, and population, `queryMaker` is the all-in-one function to turn to.
+  res.send(result)
+}
+```
 
 ## Contributing
 
