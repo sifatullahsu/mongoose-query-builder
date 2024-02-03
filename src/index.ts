@@ -3,43 +3,43 @@ import { populate } from './app/populate'
 import { query } from './app/query'
 import { select } from './app/select'
 import {
-  FilterFields,
+  AuthRules,
   Pagination,
   Populate,
   Query,
   QueryMaker,
   QuerySelector,
   Select,
-  SelectorFields,
+  SelectorRules,
   TQueryMaker,
   TQuerySelector
 } from './types'
 
-const queryMaker: TQueryMaker = (q, user, filterFields, selectorFields) => {
+const queryMaker: TQueryMaker = (q, user, authRules, selectorRules) => {
   return {
-    query: query(q, user, filterFields),
-    select: select(q.select as string, selectorFields.select),
-    populate: populate(q.populate as string | string[], selectorFields.populate),
+    query: query(q, user, authRules),
+    select: select(q.select as string, selectorRules.select),
+    populate: populate(q.populate as string | string[], selectorRules.populate),
     pagination: pagination(q)
   }
 }
 
-const querySelector: TQuerySelector = (q, selectorFields) => {
+const querySelector: TQuerySelector = (q, selectorRules) => {
   return {
-    select: select(q.select as string, selectorFields.select),
-    populate: populate(q.populate as string | string[], selectorFields.populate)
+    select: select(q.select as string, selectorRules.select),
+    populate: populate(q.populate as string | string[], selectorRules.populate)
   }
 }
 
 export {
-  FilterFields,
+  AuthRules,
   Pagination,
   Populate,
   Query,
   QueryMaker,
   QuerySelector,
   Select,
-  SelectorFields,
+  SelectorRules,
   queryMaker,
   querySelector
 }

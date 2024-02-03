@@ -63,33 +63,33 @@ export type NestedKey<O extends Record<string, unknown>, ProcessedKeys extends s
     : K
 }[Extract<keyof O, string>]
 
-export type FilterFields<T extends Record<string, unknown>, R> = {
-  all: 'OPEN' | R[]
-  filter: [NestedKey<T>, Operations[], 'OPEN' | [R[], 'OPEN' | NestedKey<T>[]][]][]
+export type AuthRules<T extends Record<string, unknown>, R> = {
+  authentication: 'OPEN' | [R[], 'OPEN' | NestedKey<T>[]][]
+  permission: [NestedKey<T>, Operations[]][]
 }
 
-export type SelectorFields<T extends Record<string, unknown>> = {
+export type SelectorRules<T extends Record<string, unknown>> = {
   select: NestedKey<T>[]
   populate: [string, string[]][]
 }
 
 // --- For Internal Use Only --- //
-type TFilterFields = {
-  all: 'OPEN' | string[]
-  filter: [string, Operations[], 'OPEN' | [string[], 'OPEN' | string[]][]][]
+export type TAuthRules = {
+  authentication: 'OPEN' | [string[], 'OPEN' | string[]][]
+  permission: [string, Operations[]][]
 }
-type TSelectorFields = {
+export type TSelectorRules = {
   select: string[]
   populate: [string, string[]][]
 }
 export type TPagination = (q: ReqQuery) => Pagination
-export type TPopulate = (input: string | string[], authorized: TSelectorFields['populate']) => Populate[]
-export type TSelect = (input: string, exclude: TSelectorFields['select']) => Select
-export type TQuery = (elements: ReqQuery, user: User, authorized: TFilterFields) => Query
+export type TPopulate = (input: string | string[], authorized: TSelectorRules['populate']) => Populate[]
+export type TSelect = (input: string, exclude: TSelectorRules['select']) => Select
+export type TQuery = (elements: ReqQuery, user: User, rules: TAuthRules) => Query
 export type TQueryMaker = (
   q: ReqQuery,
   user: User,
-  filterFields: TFilterFields,
-  selectorFields: TSelectorFields
+  authRules: TAuthRules,
+  selectorRules: TSelectorRules
 ) => QueryMaker
-export type TQuerySelector = (q: ReqQuery, selectorFields: TSelectorFields) => QuerySelector
+export type TQuerySelector = (q: ReqQuery, selectorRules: TSelectorRules) => QuerySelector

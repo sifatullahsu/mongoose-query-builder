@@ -1,12 +1,12 @@
 import { Operations, Query, TQuery } from '../types'
+import { authManager } from '../utils/authManager'
 import { objectPicker } from '../utils/objectPicker'
 import { valueModifier } from '../utils/valueModifier'
 
-export const query: TQuery = (q, user, authorized) => {
-  const keys = authorized.filter.map(item => item[0])
+export const query: TQuery = (q, user, { authentication, permission }) => {
+  const keys = permission.map(item => item[0])
   const elements = objectPicker(q, keys)
-
-  const { all, filter } = authorized
+  const auth = authManager(authentication, user)
 
   const $and: Query = []
 
@@ -14,10 +14,9 @@ export const query: TQuery = (q, user, authorized) => {
     for (const value of Array.isArray(values) ? values : [values]) {
       const [operationName, queryData] = (value as string).split(':')
 
-      const query = filter.find(i => i[0] === key)
+      const [, allowedOperations] = permission.find(i => i[0] === key)!
 
-      if (!query) break
-      if (!query[1].includes(operationName as Operations)) {
+      if (!allowedOperations.includes(operationName as Operations)) {
         throw new Error(`Unauthorized: '${operationName}' on '${key}'`)
       }
 
@@ -27,28 +26,19 @@ export const query: TQuery = (q, user, authorized) => {
         }
       }
 
-      // Authentication rules
-      if (query[2] === 'OPEN') {
-        $and.push(queryResult)
-      } else if (!user) {
-        throw new Error(`Unauthorized: 'required_registered_user' on '${key}'`)
-      } else if (Array.isArray(query[2])) {
-        const authInfo = query[2].find(x => x[0].includes(user.role))
-
-        if (!authInfo) throw new Error(`Unauthorized: 'user_role_access' on '${key}'`)
-
+      if (auth === 'OPEN' || (Array.isArray(auth) && auth.length)) {
         $and.push(queryResult)
 
-        if (Array.isArray(authInfo[1])) {
-          const newAuthInfo = authInfo[1].filter(
+        if (Array.isArray(auth) && user) {
+          const validateUser = auth.filter(
             x => !(key === x && queryData === user._id && operationName === '$eq')
           )
 
-          if (newAuthInfo.length) {
+          if (validateUser.length) {
             $and.push(
-              newAuthInfo.length > 1
-                ? { $or: newAuthInfo.map(x => ({ [x]: { $eq: user._id } })) }
-                : { [newAuthInfo[0]]: { $eq: user._id } }
+              validateUser.length > 1
+                ? { $or: validateUser.map(x => ({ [x]: { $eq: user._id } })) }
+                : { [validateUser[0]]: { $eq: user._id } }
             )
           }
         }
@@ -56,8 +46,8 @@ export const query: TQuery = (q, user, authorized) => {
     }
   }
 
-  if ($and.length === 0 && all !== 'OPEN') {
-    if (!all.find(i => i === user?.role)) throw new Error('Unauthorized access')
+  if ($and.length === 0 && auth !== 'OPEN') {
+    throw new Error('Unauthorized access')
   }
 
   return $and.length === 0 ? {} : $and.length === 1 ? $and[0] : { $and }
