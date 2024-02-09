@@ -1,21 +1,21 @@
 import { Populate, TPopulate } from '../types'
 import { select } from './select'
 
-export const populate: TPopulate = (input, authorized) => {
+export const populate: TPopulate = (input, { populate }) => {
   if (!input) return []
-  else if (typeof input === 'string') input = [input]
+  if (typeof input === 'string') input = [input]
 
   const output: Populate[] = []
   const stack: Populate[] = []
 
   for (const item of input) {
     const [key, value] = item.split(':')
-    const currentPopulate = authorized.find(item => item[0] === key)
+    const currentPopulate = populate.find(item => item[0] === key)
 
     if (currentPopulate) {
       const obj = {
         path: key,
-        select: select(value, currentPopulate[1]),
+        select: select(value, { select: currentPopulate[1] }),
         populate: []
       }
 

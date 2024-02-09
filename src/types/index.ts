@@ -66,9 +66,6 @@ export type NestedKey<O extends Record<string, unknown>, ProcessedKeys extends s
 export type AuthRules<T extends Record<string, unknown>, R> = {
   authentication: 'OPEN' | [R[], 'OPEN' | NestedKey<T>[]][]
   permission: [NestedKey<T>, Operations[]][]
-}
-
-export type SelectorRules<T extends Record<string, unknown>> = {
   select: NestedKey<T>[]
   populate: [string, string[]][]
 }
@@ -77,19 +74,16 @@ export type SelectorRules<T extends Record<string, unknown>> = {
 export type TAuthRules = {
   authentication: 'OPEN' | [string[], 'OPEN' | string[]][]
   permission: [string, Operations[]][]
-}
-export type TSelectorRules = {
   select: string[]
   populate: [string, string[]][]
 }
 export type TPagination = (q: ReqQuery) => Pagination
-export type TPopulate = (input: string | string[], authorized: TSelectorRules['populate']) => Populate[]
-export type TSelect = (input: string, exclude: TSelectorRules['select']) => Select
-export type TQuery = (elements: ReqQuery, user: User, rules: TAuthRules) => Query
-export type TQueryMaker = (
-  q: ReqQuery,
+export type TPopulate = (input: string | string[], rules: Pick<TAuthRules, 'populate'>) => Populate[]
+export type TSelect = (input: string, rules: Pick<TAuthRules, 'select'>) => Select
+export type TQuery = (
+  elements: ReqQuery,
   user: User,
-  authRules: TAuthRules,
-  selectorRules: TSelectorRules
-) => QueryMaker
-export type TQuerySelector = (q: ReqQuery, selectorRules: TSelectorRules) => QuerySelector
+  rules: Pick<TAuthRules, 'authentication' | 'permission'>
+) => Query
+export type TQueryMaker = (q: ReqQuery, user: User, rules: TAuthRules) => QueryMaker
+export type TQuerySelector = (q: ReqQuery, rules: TAuthRules) => QuerySelector

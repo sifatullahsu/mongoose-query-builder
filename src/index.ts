@@ -10,24 +10,23 @@ import {
   QueryMaker,
   QuerySelector,
   Select,
-  SelectorRules,
   TQueryMaker,
   TQuerySelector
 } from './types'
 
-const queryMaker: TQueryMaker = (q, user, authRules, selectorRules) => {
+const queryMaker: TQueryMaker = (q, user, rules) => {
   return {
-    query: query(q, user, authRules),
-    select: select(q.select as string, selectorRules.select),
-    populate: populate(q.populate as string | string[], selectorRules.populate),
+    query: query(q, user, { authentication: rules.authentication, permission: rules.permission }),
+    select: select(q.select as string, { select: rules.select }),
+    populate: populate(q.populate as string, { populate: rules.populate }),
     pagination: pagination(q)
   }
 }
 
-const querySelector: TQuerySelector = (q, selectorRules) => {
+const querySelector: TQuerySelector = (q, rules) => {
   return {
-    select: select(q.select as string, selectorRules.select),
-    populate: populate(q.populate as string | string[], selectorRules.populate)
+    select: select(q.select as string, { select: rules.select }),
+    populate: populate(q.populate as string, { populate: rules.populate })
   }
 }
 
@@ -39,7 +38,6 @@ export {
   QueryMaker,
   QuerySelector,
   Select,
-  SelectorRules,
   queryMaker,
   querySelector
 }
