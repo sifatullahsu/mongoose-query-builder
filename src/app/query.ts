@@ -8,6 +8,7 @@ export const query: TQuery = (q, user, { authentication, permission }) => {
   const elements = objectPicker(q, keys)
   const auth = authManager(authentication, user)
 
+  let isFieldsAuthenticated: boolean = false
   const $and: Query = []
 
   for (const [key, values] of Object.entries(elements)) {
@@ -34,7 +35,8 @@ export const query: TQuery = (q, user, { authentication, permission }) => {
             x => !(key === x && queryData === user._id && operationName === '$eq')
           )
 
-          if (validateUser.length) {
+          if (validateUser.length && !isFieldsAuthenticated) {
+            isFieldsAuthenticated = true
             $and.push(
               validateUser.length > 1
                 ? { $or: validateUser.map(x => ({ [x]: { $eq: user._id } })) }
