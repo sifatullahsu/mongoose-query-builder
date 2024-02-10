@@ -65,7 +65,7 @@ export type NestedKey<O extends Record<string, unknown>, ProcessedKeys extends s
 
 export type AuthRules<T extends Record<string, unknown>, R> = {
   authentication: 'OPEN' | [R[], 'OPEN' | NestedKey<T>[]][]
-  permission: [NestedKey<T>, Operations[]][]
+  query: [NestedKey<T>, Operations[]][]
   select: NestedKey<T>[]
   populate: [string, string[]][]
 }
@@ -73,7 +73,7 @@ export type AuthRules<T extends Record<string, unknown>, R> = {
 // --- For Internal Use Only --- //
 export type TAuthRules = {
   authentication: 'OPEN' | [string[], 'OPEN' | string[]][]
-  permission: [string, Operations[]][]
+  query: [string, Operations[]][]
   select: string[]
   populate: [string, string[]][]
 }
@@ -83,7 +83,7 @@ export type TSelect = (input: string, rules: Pick<TAuthRules, 'select'>) => Sele
 export type TQuery = (
   elements: ReqQuery,
   user: User,
-  rules: Pick<TAuthRules, 'authentication' | 'permission'>
+  rules: Pick<TAuthRules, 'authentication' | 'query'>
 ) => Query
 export type TQueryMaker = (q: ReqQuery, user: User, rules: TAuthRules) => QueryMaker
 export type TQuerySelector = (q: ReqQuery, rules: TAuthRules) => QuerySelector

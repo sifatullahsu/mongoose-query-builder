@@ -3,8 +3,8 @@ import { authManager } from '../utils/authManager'
 import { objectPicker } from '../utils/objectPicker'
 import { valueModifier } from '../utils/valueModifier'
 
-export const query: TQuery = (q, user, { authentication, permission }) => {
-  const keys = permission.map(item => item[0])
+export const query: TQuery = (q, user, { authentication, query }) => {
+  const keys = query.map(item => item[0])
   const elements = objectPicker(q, keys)
   const auth = authManager(authentication, user)
 
@@ -15,7 +15,7 @@ export const query: TQuery = (q, user, { authentication, permission }) => {
     for (const value of Array.isArray(values) ? values : [values]) {
       const [operationName, queryData] = (value as string).split(':')
 
-      const [, allowedOperations] = permission.find(i => i[0] === key)!
+      const [, allowedOperations] = query.find(i => i[0] === key)!
 
       if (!allowedOperations.includes(operationName as Operations)) {
         throw new Error(`Unauthorized: '${operationName}' on '${key}'`)

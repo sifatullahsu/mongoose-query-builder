@@ -16,7 +16,7 @@ import {
 
 const queryMaker: TQueryMaker = (q, user, rules) => {
   return {
-    query: query(q, user, { authentication: rules.authentication, permission: rules.permission }),
+    query: query(q, user, { authentication: rules.authentication, query: rules.query }),
     select: select(q.select as string, { select: rules.select }),
     populate: populate(q.populate as string, { populate: rules.populate }),
     pagination: pagination(q)
