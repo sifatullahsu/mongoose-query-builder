@@ -1,7 +1,8 @@
 import { TSelect } from '../types'
+import { negativeSelect } from '../utils/negativeSelect'
 
 export const select: TSelect = (input, { select }) => {
-  if (!input) return ''
+  if (!input) return negativeSelect(select)
   if (Array.isArray(input)) throw new Error('Multiple `select` found.')
 
   let isNegative: boolean = false
@@ -10,18 +11,32 @@ export const select: TSelect = (input, { select }) => {
     .split(',')
     .map(element => element.trim())
     .filter(element => {
-      if (element.startsWith('-') && element !== '-_id' && !isNegative) {
+      const regexInvalid = new RegExp(/^$|\s|\+$|^-{2,}/).test(element)
+      const selectInvalid = select.filter(x => new RegExp(`${x}|^${x}\\.|^-${x}`).test(element))
+
+      if (
+        element.startsWith('-') &&
+        element !== '-_id' &&
+        !regexInvalid &&
+        !selectInvalid.length &&
+        !isNegative
+      ) {
         isNegative = true
       }
-
-      const selectInvalid = select.filter(x => x === element || element.startsWith(`${x}.`))
-      const regexInvalid = /^$|\s|\+$|^-{2,}/.test(element)
 
       return !selectInvalid.length && !regexInvalid
     })
 
-  const validation = isNegative ? ' ' + select.map(x => `-${x}`).join(' ') : ''
-  return result.join(' ') + validation
+  const resultValidation =
+    result.length === 0
+      ? negativeSelect(select)
+      : result.length === 1 && result[0] === '-_id'
+      ? `-_id ${negativeSelect(select)}`
+      : isNegative
+      ? `${result.join(' ')} ${negativeSelect(select)}`
+      : result.join(' ')
+
+  return resultValidation.trim()
 }
 
 /* =========
@@ -31,4 +46,10 @@ Regular Expression: /^$|\s|\+$|^-{2,}/
 \s: Matches any whitespace character.
 \+$: Matches a string that starts with a single '+'.
 ^-{2,}: Matches a string that starts with two or more consecutive '-' characters.
+============
+Regular Expression: `${x}|^${x}\\.|^-${x}`
+============
+${x}: Matches exact match of the string
+^${x}\\.: Matches start with string ${x}.
+^-${x}: Matches start with string -${x}
 ========= */
