@@ -184,7 +184,7 @@ To retrieve related data, you can use the `populate` query parameter in your API
   GET /api/v1/services?populate=category:title,-_id&populate=tags:title
   ```
 
-**Nested Object Populations:**
+**Nested Object / Array of Object Populations:**
 
 - For nested documents/objects, specify the query like this:
 
@@ -192,7 +192,7 @@ To retrieve related data, you can use the `populate` query parameter in your API
   GET /api/v1/services?populate=meta.user:name
   ```
 
-**Nested Populations and Parent Populations:**
+**Nested Populations:**
 
 - When you need to populate data from nested populations, it's essential to include the parent population in your query. Without the parent population, nested populations won't function as expected.
 
@@ -204,8 +204,6 @@ To retrieve related data, you can use the `populate` query parameter in your API
 
 Note: It's optional to select specific fields during population. If no fields are provided after the colon, the entire document will be returned.
 
-For more detailed documentation and examples, please visit our GitHub repository.
-
 ## Core Elements
 
 - **Functions**
@@ -216,7 +214,6 @@ For more detailed documentation and examples, please visit our GitHub repository
 - **TypeScript Types**
 
   - `AuthRules`: It's a generic type designed to enhance the security of filtering based on user roles. The first parameter is the mongoose schema interface, and the second parameter is the user role. This type assists in defining and enforcing filtering rules securely within your application.
-  - `SelectorRules` - It's another generic type focused on field selection. It accepts only a mongoose schema interface as its parameter. This type is useful for specifying and enforcing field selection rules within the context of your application.
 
 ### `queryMaker()`
 
@@ -237,12 +234,19 @@ For more detailed documentation and examples, please visit our GitHub repository
   // Example 01
   const serviceAuthRules: AuthRules<IService, IRole> = {
     authentication: 'OPEN',
-    permission: [
+    query: [
       ['category', ['$eq', '$ne']],
       ['mentor', ['$eq']],
       ['status', ['$eq']],
       ['packages.price', ['$gt', '$gte', '$lt', '$lte']],
       ['title', ['$regex']]
+    ],
+    select: ['password'],
+    populate: [
+      ['mentor', ['password']],
+      ['category', []],
+      ['topics', []],
+      ['topics.category', []]
     ]
   }
 
@@ -253,17 +257,24 @@ For more detailed documentation and examples, please visit our GitHub repository
       [['seller'], ['sellerId']],
       [['mentor'], ['mentorId', 'userId']]
     ],
-    permission: [
+    query: [
       ['category', ['$eq', '$ne']],
       ['mentor', ['$eq']],
       ['status', ['$eq']],
       ['packages.price', ['$gt', '$gte', '$lt', '$lte']],
       ['title', ['$regex']]
+    ],
+    select: ['password', 'contact'],
+    populate: [
+      ['mentor', ['password']],
+      ['category', []],
+      ['topics', []],
+      ['topics.category', []]
     ]
   }
   ```
 
-  - `authentication`: This field defines the authentication process for querying or filtering data, establishing rules for document access. It encompasses open-to-all, user-role-based, and user-based scenarios. The following rules delineate the authentication process:
+  - `authentication`: This authentication field defines the authentication process for querying or filtering data, establishing rules for document access. It encompasses open-to-all, user-role-based, and user-based scenarios. The following rules delineate the authentication process:
 
     - **Open Access for All**: When set to the string `'OPEN'`, it indicates that the fields are open to everyone. Query execution does not involve role-based or user-based checking, allowing unrestricted access to the entire database collection. For example, if filtering the collection by the category according to above "Example 01", the query would look like this:
 
@@ -304,62 +315,145 @@ For more detailed documentation and examples, please visit our GitHub repository
       }
       ```
 
-  - `permission`: The filter parameter is a set of rules that define secure filtering behavior when using query parameters in your API requests. It is structured as an array of tuples, each containing two elements. These tuples specify the filtering behavior for specific fields, ensuring secure and controlled filtering in your MongoDB queries.
+  - `query`: The query field is a set of rules that define secure filtering behavior when using query parameters in your API requests. It is structured as an array of tuples, each containing two elements. These tuples specify the filtering behavior for specific fields, ensuring secure and controlled filtering in your MongoDB queries.
 
     - **Field Name (String):** The first element is a string representing the key of the schema interface for a specific field in your Mongoose model. This field is allowed to be used as a query parameter in API requests for filtering.
 
     - **Allowed Operations (Array of Strings):** The second element is an array of strings specifying the allowed query operations for filtering. If a request uses an operation not listed in this array, an error will be thrown. Operation can be, `$eq`, `$ne`, `$gt`, `$gte`, `$lt`, `$lte`, `$in`, `$nin`, `$all`, `$size`, `$exists`, `$type`, `$regex`, `$mod` which we already discussed earlier.
 
-- #### **Step 3: Defining SelectorRules**
+    These are the some setuations and how it will work or response.
 
-  ```typescript
-  // Example 03
-  const serviceSelectorRules: SelectorRules<IService> = {
-    select: [],
-    populate: [
-      ['mentor', ['password']],
-      ['category', []],
-      ['topics', []],
-      ['topics.category', []]
+    - With the following configuration on "Example 01"
+
+      ```json
+      [
+        ["category", ["$eq", "$ne"]],
+        ["mentor", ["$eq"]],
+        ["status", ["$eq"]],
+        ["packages.price", ["$gt", "$gte", "$lt", "$lte"]],
+        ["title", ["$regex"]]
+      ]
+      ```
+
+      - When the query is requested with `?category=$eq:646c817b303ae9cca93ad11b`, the operation type '$eq' is authenticated specifically for the 'category' field. It'll execute.
+      - When the query is requested with `?category=$in:646c817b303ae9cca93ad11b`, the operation type '$in' is not authenticated specifically for the 'category' field. It'll throw an error.
+      - When the query is requested with `?packages.price=$gte:20`, the operation type '$gte' is authenticated specifically for the 'packages.price' field. It'll execute.
+      - When the query is requested with `?packages.price=$eq:20`, the operation type '$eq' is not authenticated specifically for the 'packages.price' field. It'll throw an error.
+
+    **Note**: If the requested person is authorized then it will proceed to the next. Otherwise an authorization error is issued as the initial response.
+
+  - `select`: The select field is an array of string. These are specific fields which fields are not allowed to be queried using `select` query parameter. It is used to restrict the selection of specific document attributes in the query results. These are the some setuations and how it will work or response.
+
+    - With the following configuration on "Example 01" `['password']`, let assume `contact` field have two nested fields called `email`, and `number`. It can be object or array of object.
+
+      - If requested query is `?select=title,packages,password` then response will be `title packages`.
+      - If requested query is `?select=title,packages,password,-_id` then response will be `title packages -_id`.
+      - If requested query is `?select=-title` then response will be `-title -password`.
+      - If requested query is `?select=-title,-_id` then response will be `-title -_id -password`.
+      - If requested query is `?select=-title,-_id,-packages` then response will be `-title -_id -packages -password`.
+      - If requested query is `?select=title,contact` then response will be `title contact`.
+      - If requested query is `?select=title,contact.email` then response will be `title contact.email`.
+      - If requested query is `?select=-title,-contact.email` then response will be `-contact.email -password`.
+
+    - With the following configuration on "Example 02" `['password', 'contact']`,
+
+      - If requested query is `?select=title,packages,password` then response will be `title packages`.
+      - If requested query is `?select=title,packages,password,-_id` then response will be `title packages -_id`.
+      - If requested query is `?select=-title` then response will be `-title -password -contact`.
+      - If requested query is `?select=-title,-_id` then response will be `-title -_id -password -contact`.
+      - If requested query is `?select=-title,-_id,-packages` then response will be `-title -_id -packages -password -contact`.
+      - If requested query is `?select=title,contact` then response will be `title`.
+      - If requested query is `?select=title,contact.email` then response will be `title`.
+      - If requested query is `?select=-title,-contact.email` then response will be `-title -password -contact`.
+
+    **Note:** When utilizing both the `include` and `exclude` fields together, Mongoose may throw an error. For a detailed understanding of how Mongoose handles this scenario, please refer to the official Mongoose documentation on [Query.prototype.select()](<https://mongoosejs.com/docs/api/query.html#Query.prototype.select()>).
+
+  - `populate`: The populate field is an array of tuples. The first parameter of each tuple indicates the field that can be populated using the `populate` query parameters. The second parameter is an array of fields that should not be shared with the front end when populating. Which is exact similar to `select`. For example, you can specify that the "mentor" field can be populated, but you do not want to share the "password" attribute when populating the "mentor" field. With the "populate" feature, you can:
+
+    - Basic population
+    - Multiple population
+    - Population with field selection
+    - Nested object / array of object population
+    - Nested population
+
+    Suppose, With the following configuration on "Example 01"
+
+    ```json
+    [
+      ["mentor", ["password"]],
+      ["category", []],
+      ["topics", []],
+      ["topics.category", []]
     ]
-  }
-  ```
+    ```
 
-  The `serviceSelectorRules` configuration defines authorized selector fields for controlling the selection and population of specific document attributes in the query results.
+    - If requested query is `?populate=mentor&populate=category:title&populate=user&populate=topics&populate=topics.category` then response will be
 
-  - The `select` key is an array that specifies which fields are not allowed to be queried using the `select` query parameter. It is used to restrict the selection of specific document attributes in the query results. For instance, on a user collection, the "password" field is an essential document attribute that should not be accessible through query parameters. By adding "password" to the `select` array, you prevent it from being queried and retrieved. It's important to note that for fields you do not want to share, you should also set them as `"select: false"` in your schema. This ensures that these fields are not accessible from the query.
+      ```json
+      [
+        {
+          "path": "mentor",
+          "select": "-password",
+          "populate": []
+        },
+        {
+          "path": "category",
+          "select": "title",
+          "populate": []
+        },
+        {
+          "path": "topics",
+          "select": "title",
+          "populate": [
+            {
+              "path": "category",
+              "select": "",
+              "populate": []
+            }
+          ]
+        }
+      ]
+      ```
 
-  - The `populate` key is an array of tuples. The first parameter of each tuple indicates the field that can be populated using the `populate` query parameter. The second parameter is an array of fields that should not be shared with the front end when populating. For example, you can specify that the "mentor" field can be populated, but you do not want to share the "password" attribute when populating the "mentor" field.
+      **Note:** The requested population operation with `&populate=user` has been removed due to it being an unauthorized populate operation.
 
-    **Populating Document Fields**
+    - If requested query is `?populate=topics&populate=topics.category` then response will be
 
-    One of the powerful features of the Mongoose Query Maker is the ability to populate document fields, allowing you to retrieve related data along with your query results. This feature enhances the richness of the data you can access and is particularly useful for scenarios where data is distributed across multiple collections.
+      ```json
+      [
+        {
+          "path": "topics",
+          "select": "title",
+          "populate": [
+            {
+              "path": "category",
+              "select": "",
+              "populate": []
+            }
+          ]
+        }
+      ]
+      ```
 
-    With the "populate" feature, you can:
+    - If requested query is `?populate=topics.category` then response will be
 
-    - Populate with Main Key: You can specify the main key that you want to populate. This is a straightforward way to retrieve data associated with the main key.
+      ```json
+      []
+      ```
 
-    - Populate with Nested Object Key: When your documents contain nested objects, you can still populate fields within those nested objects, making it easy to access deeply nested data.
+      **Note:** It will not work as expected. Because, When you need to populate data from nested populations, it's essential to include the parent population in your query. Without the parent population, nested populations won't function as expected.
 
-    - Populate with an Array of Keys: If your documents have arrays of data, you can specify which keys within the array should be populated, giving you control over the data you retrieve.
-
-    - Populate with Nested Populate: Sometimes, you may need to access data from nested populations. The Mongoose Query Builder supports this, allowing you to populate fields within nested populations to retrieve even more detailed information.
-
-    The "populate" feature provides flexibility in accessing related data, giving you the ability to tailor your query results to match the specific needs of your application. It's a versatile tool for building rich and meaningful responses to your queries.
-
-  This configuration allows you to fine-tune the access permissions for selecting and populating document attributes, enhancing data security and privacy. Remember to set fields you don't want to share as `"select: false"` in your schema to ensure they are not accessible from the query.
+    **Note:** For a detailed understanding of how Mongoose handles this nested populating scenario, please refer to the official Mongoose documentation on [Populating across multiple levels](https://mongoosejs.com/docs/populate.html#deep-populate).
 
   **Important Note: TypeScript Key Suggestions**
 
-  Please note that the Mongoose Query Maker currently does not provide TypeScript key suggestions for the "select" and "populate" fields. However, it does support the specified structure for building these fields.
+  Please note that the Mongoose Query Maker currently does not provide TypeScript key suggestions for the "populate" field. However, it does support the specified structure for building these fields.
 
-  While TypeScript key suggestions can be a helpful feature, the Mongoose Query Maker relies on the defined structure to determine how to handle "select" and "populate" fields. Therefore, it's important to ensure that the structure of these fields adheres to the guidelines provided in the documentation to achieve the desired results.
-
-  Rest assured that despite the lack of automatic key suggestions, the Mongoose Query Maker allows you to configure "select" and "populate" fields effectively, granting you fine-grained control over query results and data retrieval.
+  While TypeScript key suggestions can be a helpful feature, the Mongoose Query Maker relies on the defined structure to determine how to handle "populate" field. Therefore, it's important to ensure that the structure of these fields adheres to the guidelines provided in the documentation to achieve the desired results.
 
 ```typescript
 const getAllServices = async (req: Request, res: Response, next: NextFunction) => {
-  const queryResult = queryMaker(req.query, req.user, serviceAuthRules, serviceSelectorRules)
+  const queryResult = queryMaker(req.query, req.user, serviceAuthRules)
 
   const { query, pagination, select, populate } = queryResult
   const { page, limit, skip, sort } = pagination
@@ -377,9 +471,11 @@ const getAllServices = async (req: Request, res: Response, next: NextFunction) =
 - `queryMaker`: filter, select, populate, and paginate
 - `querySelector`: select, and populate
 
+**Note:** It only handle select, populate for you. It doesn't provied any authentication checking. You have to make sure it manually.
+
 ```typescript
 const getSingleService = async (req: Request, res: Response, next: NextFunction) => {
-  const queryResult = querySelector(req.query, serviceSelectorRules)
+  const queryResult = querySelector(req.query, serviceAuthRules)
   const { select, populate } = queryResult
 
   const result = await Service.findById(req.params.id, select, { populate })
