@@ -12,7 +12,7 @@ export const pagination: TPagination = q => {
   limit = Math.max(1, isNaN(limit) ? 10 : limit)
 
   const skip = (page - 1) * limit
-  const sort = (q.sort as string) || 'createdAt'
+  const sort = q.sort ? (q.sort as string).replace(/,/g, ' ') : 'createdAt'
 
   return { page, limit, skip, sort }
 }

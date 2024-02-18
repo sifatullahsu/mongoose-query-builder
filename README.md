@@ -105,7 +105,7 @@ To execute filter queries, use the `$and` condition, specifying each filter oper
   Query Output:
 
   ```json
-  { "description": { "$regex": new RegExp("pattern", "flags") } }
+  { "description": { "$regex": /pattern/<flags> } }
   ```
 
 If no authorized query parameter is provided, the query output will be an empty object `{}`. Filter operations are authorized based on specific criteria, including accessibility for different user roles, which will be discussed later in this documentation.
