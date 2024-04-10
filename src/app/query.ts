@@ -1,56 +1,29 @@
-import { Operations, Query, TQuery } from '../types'
+import { Query, TQuery } from '../types'
 import { authManager } from '../utils/authManager'
-import { objectPicker } from '../utils/objectPicker'
 import { valueModifier } from '../utils/valueModifier'
 
 export const query: TQuery = (q, user, { authentication, query }) => {
-  const keys = query.map(item => item[0])
-  const elements = objectPicker(q, keys)
-  const auth = authManager(authentication, user)
+  const { auth, authQuery } = authManager(authentication, user)
 
-  let isFieldsAuthenticated: boolean = false
-  const $and: Query = []
+  const $and: Query = authQuery ? [authQuery] : []
 
-  for (const [key, values] of Object.entries(elements)) {
-    for (const value of Array.isArray(values) ? values : [values]) {
-      const [operationName, queryData] = (value as string).split(':')
+  query.forEach(([key, operations]) => {
+    const validKey = q[key]
 
-      const [, allowedOperations] = query.find(i => i[0] === key)!
+    if (validKey) {
+      if (Array.isArray(auth) && auth.includes(key)) return
 
-      if (!allowedOperations.includes(operationName as Operations)) {
-        throw new Error(`Unauthorized: '${operationName}' on '${key}'`)
-      }
+      for (const queryValue of Array.isArray(validKey) ? validKey : [validKey]) {
+        const [type, value] = queryValue.split(':')
 
-      const queryResult = {
-        [key]: {
-          [operationName]: valueModifier(operationName as Operations, queryData)
+        if (!operations.includes(type)) {
+          throw new Error(`Unauthorized: '${type}' on '${key}'`)
         }
-      }
 
-      if (auth === 'OPEN' || (Array.isArray(auth) && auth.length)) {
-        $and.push(queryResult)
-
-        if (Array.isArray(auth) && user) {
-          const validateUser = auth.filter(
-            x => !(key === x && queryData === user._id && operationName === '$eq')
-          )
-
-          if (validateUser.length && !isFieldsAuthenticated) {
-            isFieldsAuthenticated = true
-            $and.push(
-              validateUser.length > 1
-                ? { $or: validateUser.map(x => ({ [x]: { $eq: user._id } })) }
-                : { [validateUser[0]]: { $eq: user._id } }
-            )
-          }
-        }
+        $and.push({ [key]: { [type]: valueModifier(type, value) } })
       }
     }
-  }
-
-  if ($and.length === 0 && auth !== 'OPEN') {
-    throw new Error('Unauthorized access')
-  }
+  })
 
   return $and.length === 0 ? {} : $and.length === 1 ? $and[0] : { $and }
 }
