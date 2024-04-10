@@ -486,11 +486,11 @@ const getSingleService = async (req: Request, res: Response, next: NextFunction)
 
 ## Contributing
 
-We welcome contributions from the community. If you want to contribute to this project, please contact us.
+We welcome contributions from the community. If you want to contribute to this project.
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+This project is licensed under the MIT License.
 
 ## Contact
 
