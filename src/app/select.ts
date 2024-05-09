@@ -8,19 +8,23 @@ export const select: TSelect = (input, { select }) => {
 
   let isNegative: boolean = false
 
-  const result = input.split(',').reduce((prev, value) => {
-    value = value.trim()
+  if (input) {
+    const result = input.split(',').reduce((prev, value) => {
+      value = value.trim()
 
-    if (new RegExp(`(^$|\\s|^\\+|^--)|((^|\\s)(-?(?:${pipe}))($|\\s))`).test(value)) {
-      return prev
-    }
+      if (new RegExp(`(^$|\\s|^\\+|^--)|((^|\\s)(-?(?:${pipe}))($|\\s))`).test(value)) {
+        return prev
+      }
 
-    if (value.startsWith('-') && value !== '-_id' && !isNegative) {
-      isNegative = true
-    }
+      if (value.startsWith('-') && value !== '-_id' && !isNegative) {
+        isNegative = true
+      }
 
-    return `${prev} ${value}`
-  }, '')
+      return `${prev} ${value}`
+    }, '')
 
-  return `${result} ${isNegative ? negative : ''}`.trim()
+    return `${result} ${isNegative ? negative : ''}`.trim()
+  }
+
+  return negative
 }
