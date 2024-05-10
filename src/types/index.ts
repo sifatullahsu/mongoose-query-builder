@@ -29,6 +29,20 @@ export type QuerySelector = {
   populate: Populate[]
 }
 
+export type QueryPagination = {
+  current: number
+  total: number
+  next: number | null
+  prev: number | null
+  records: number
+}
+
+export type QueryExecutor = {
+  data: Record<string, any>[]
+  pagination: QueryPagination
+  executes: QueryMaker
+}
+
 export type User = {
   _id: string
   role: string
@@ -87,3 +101,5 @@ export type TQuery = (
 ) => Query
 export type TQueryMaker = (q: ReqQuery, user: User, rules: TAuthRules) => QueryMaker
 export type TQuerySelector = (q: ReqQuery, rules: TAuthRules) => QuerySelector
+export type TQueryPagination = (page: number, limit: number, count: number) => QueryPagination
+export type TQueryExecutor = (q: ReqQuery, user: User, rules: TAuthRules) => Promise<QueryExecutor>
