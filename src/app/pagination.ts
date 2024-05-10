@@ -6,9 +6,9 @@ export const pagination: TPagination = q => {
   if (Array.isArray(q.sort)) throw new Error('Multiple `sort` found.')
   if (Array.isArray(q.skip)) throw new Error('Multiple `skip` found.')
 
-  const page = Number(q.page) || 1
-  const limit = Number(q.limit) || 20
-  const skip = (Number(q.skip) || 0) + (page - 1) * limit
+  const page = parseInt(q.page as string) || 1
+  const limit = parseInt(q.limit as string) || 20
+  const skip = (parseInt(q.skip as string) || 0) + (page - 1) * limit
   const sort = q.sort ? (q.sort as string).replace(/,/g, ' ') : 'createdAt'
 
   return { page, limit, skip, sort }
