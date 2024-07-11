@@ -1,12 +1,14 @@
 import { Populate, TPopulate } from '../types'
 import { select } from './select'
 
-export const populate: TPopulate = (input, { populate }) => {
+export const populate: TPopulate = (input, populate, defaultValue) => {
   if (!input) return []
   if (typeof input === 'string') input = [input]
 
   const output: Populate[] = []
   const stack: Populate[] = []
+
+  console.log(defaultValue)
 
   for (const item of input) {
     const [key, value] = item.split(':')
@@ -15,7 +17,7 @@ export const populate: TPopulate = (input, { populate }) => {
     if (currentPopulate) {
       const obj = {
         path: key,
-        select: select(value, { select: currentPopulate[1] }),
+        select: select(value, currentPopulate[1]),
         populate: []
       }
 

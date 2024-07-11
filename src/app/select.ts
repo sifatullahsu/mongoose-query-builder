@@ -1,10 +1,12 @@
 import { TSelect } from '../types'
 import { selectFormatter } from '../utils/selectFormatter'
 
-export const select: TSelect = (input, { select }) => {
+export const select: TSelect = (input, select, defaultValue = []) => {
   if (Array.isArray(input)) throw new Error('Multiple `select` found.')
 
   const { negative, pipe } = selectFormatter(select)
+
+  console.log(defaultValue)
 
   let isNegative: boolean = false
 

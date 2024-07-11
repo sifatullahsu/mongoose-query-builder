@@ -82,6 +82,11 @@ export type AuthRules<T extends Record<string, unknown>, R> = {
   query: [NestedKey<T>, Operations[]][]
   select: NestedKey<T>[]
   populate: [string, string[]][]
+  defaultValue?: {
+    pagination?: Partial<Pagination>
+    select?: NestedKey<T>[]
+    populate?: [string, string[]][]
+  }
 }
 
 // --- For Internal Use Only --- //
@@ -90,10 +95,19 @@ export type TAuthRules = {
   query: [string, Operations[]][]
   select: string[]
   populate: [string, string[]][]
+  defaultValue?: {
+    pagination?: Partial<Pagination>
+    select?: string[]
+    populate?: [string, string[]][]
+  }
 }
-export type TPagination = (q: ReqQuery) => Pagination
-export type TPopulate = (input: string | string[], rules: Pick<TAuthRules, 'populate'>) => Populate[]
-export type TSelect = (input: string, rules: Pick<TAuthRules, 'select'>) => Select
+export type TPagination = (q: ReqQuery, defaultValue?: Partial<Pagination>) => Pagination
+export type TSelect = (input: string, rules: TAuthRules['select'], defaultValue?: string[]) => Select
+export type TPopulate = (
+  input: string | string[],
+  rules: TAuthRules['populate'],
+  defaultValue?: [string, string[]][]
+) => Populate[]
 export type TQuery = (
   elements: ReqQuery,
   user: User,
