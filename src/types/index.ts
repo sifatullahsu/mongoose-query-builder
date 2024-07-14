@@ -67,6 +67,14 @@ export type Operations =
   | '$regex'
   | '$mod'
 
+export type Validator<T extends Record<string, unknown>> = (data: {
+  key: T
+  operator: Operations
+  value: any
+  rules: [NestedKey<T>, Operations[]]
+  user: User
+}) => boolean
+
 export type NestedKey<O extends Record<string, unknown>, ProcessedKeys extends string = ''> = {
   [K in Extract<keyof O, string>]: K extends ProcessedKeys
     ? K
@@ -82,6 +90,7 @@ export type AuthRules<T extends Record<string, unknown>, R> = {
   query: [NestedKey<T>, Operations[]][]
   select: NestedKey<T>[]
   populate: [string, string[]][]
+  validator?: Validator<T>
   defaultValue?: {
     pagination?: Partial<Pagination>
     select?: NestedKey<T>[]
@@ -90,11 +99,19 @@ export type AuthRules<T extends Record<string, unknown>, R> = {
 }
 
 // --- For Internal Use Only --- //
+export type TValidator = (data: {
+  key: string
+  operator: Operations
+  value: any
+  rules: [string, Operations[]]
+  user: User
+}) => boolean
 export type TAuthRules = {
   authentication: 'OPEN' | [string[], 'OPEN' | string[]][]
   query: [string, Operations[]][]
   select: string[]
   populate: [string, string[]][]
+  validator?: TValidator
   defaultValue?: {
     pagination?: Partial<Pagination>
     select?: string[]
