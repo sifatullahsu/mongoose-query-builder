@@ -1,12 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { TAuthRules, User } from '../types'
+import { TBuilder, TValueHandler } from '../types'
 import { valueValidator } from './valueValidator'
 
-export const builder = (
-  q: Record<string, any>[],
-  authRules: TAuthRules,
-  user: User
-): Record<string, any>[] => {
+export const builder: TBuilder = (q, authRules, user) => {
   const result = q.reduce(
     (query: Record<string, any>[], element: Record<string, any>): Record<string, any>[] => {
       const keys = Object.keys(element)
@@ -20,7 +16,6 @@ export const builder = (
         throw new Error(`Unauthorized format: array required in '${key}'.`)
       }
 
-      // callback
       if (['$and', '$or', '$nor'].includes(key)) {
         if (!value.length) {
           throw new Error(`Empty operation found for key: '${key}'`)
@@ -38,7 +33,7 @@ export const builder = (
         throw new Error(`Unauthorized access: '${key}'.`)
       }
 
-      const result = valueHandler({ key, value, rules, user, authRules })
+      const result = valueHandler({ value, rules, user, authRules })
 
       query.push({ [key]: result })
       return query
@@ -49,8 +44,8 @@ export const builder = (
   return result
 }
 
-const valueHandler = ({ key, value, rules, user, authRules }) => {
-  const [, allowedOperators] = rules
+const valueHandler: TValueHandler = ({ value, rules, user, authRules }) => {
+  const [key, allowedOperators] = rules
 
   const result = value.reduce((initial, item) => {
     if (!Array.isArray(item) || item.length !== 2) {
@@ -66,69 +61,38 @@ const valueHandler = ({ key, value, rules, user, authRules }) => {
       throw new Error(`Multiple operations '${operator}' found on '${key}'`)
     }
 
-    if (operator === '$not') {
+    if (['$not', '$elemMatch'].includes(operator)) {
       if (!Array.isArray(value)) {
         throw new Error(`Unauthorized format: array required for '${operator}' on '${key}'.`)
       }
       if (!value.length) {
         throw new Error(`Empty operation found for '${operator}' on '${key}'.`)
       }
+      if (operator === '$elemMatch' && !Array.isArray(value[0])) {
+        const result = builder(value, authRules, user).reduce((prev, item) => {
+          for (const key in item) {
+            const _key = key.split('.')[1]
 
-      const result = valueHandler({ key, value, rules, user, authRules })
+            if (Object.prototype.hasOwnProperty.call(prev, _key)) {
+              throw new Error(`Multiple operations found on '${key}' in '${operator}'`)
+            }
 
-      initial[operator] = result
-      return initial
-    }
-
-    if (operator === '$elemMatch') {
-      if (!Array.isArray(value)) {
-        throw new Error(`Unauthorized format: array required for '${operator}' on '${key}'.`)
-      }
-      if (!value.length) {
-        throw new Error(`Empty operation found for '${operator}' on '${key}'.`)
-      }
-
-      const isValue = Array.isArray(value[0])
-
-      if (isValue) {
-        const result = valueHandler({ key, value, rules, user, authRules })
+            prev[_key] = item[key]
+          }
+          return prev
+        }, {})
 
         initial[operator] = result
         return initial
       }
 
-      const result = builder(value, authRules, user)
-      const processedResult = result.reduce((prev, item) => {
-        for (const key in item) {
-          const newKey = key.split('.')[1]
+      const result = valueHandler({ value, rules, user, authRules })
 
-          if (Object.prototype.hasOwnProperty.call(prev, newKey)) {
-            throw new Error(`Multiple operations found on '${key}' in '${operator}'`)
-          }
-
-          prev[newKey] = item[key]
-          return prev
-        }
-      }, {})
-
-      initial[operator] = processedResult
+      initial[operator] = result
       return initial
     }
 
-    const isValidate = valueValidator({ key, operator, value, rules, user })
-
-    if (!isValidate) {
-      throw new Error(`Unauthorized value: '${operator}' on '${key}'`)
-    }
-    if (authRules.validator) {
-      const result = authRules.validator({ key, operator, value, rules, user })
-      if (typeof result !== 'boolean') {
-        throw new Error(`Validator function should be return a 'boolean'`)
-      }
-      if (!result) {
-        throw new Error(`Validator error: '${operator}' on '${key}'`)
-      }
-    }
+    valueValidator({ key, operator, value, rules, user, authRules })
 
     initial[operator] = value
     return initial
@@ -136,38 +100,3 @@ const valueHandler = ({ key, value, rules, user, authRules }) => {
 
   return result
 }
-
-/* const [, allowedOperators] = rules
-
-    const result = value.reduce((initial, item) => {
-      if (!Array.isArray(item) || item.length !== 2) {
-        throw new Error('Each operation should be a [key, value] pair.')
-      }
-
-      const [operator, value] = item
-
-      if (!allowedOperators.includes(operator)) {
-        throw new Error(`Unauthorized operation: '${operator}' on '${key}'`)
-      }
-      if (Object.prototype.hasOwnProperty.call(initial, key)) {
-        throw new Error(`Multiple operations '${operator}' found on '${key}'`)
-      }
-
-      const isValidate = valueValidator({ key, operator, value, rules, user })
-
-      if (!isValidate) {
-        throw new Error(`Unauthorized value: '${operator}' on '${key}'`)
-      }
-      if (authRules.validator) {
-        const result = authRules.validator({ key, operator, value, rules, user })
-        if (typeof result !== 'boolean') {
-          throw new Error(`Validator function should be return a 'boolean'`)
-        }
-        if (!result) {
-          throw new Error(`Validator error: '${operator}' on '${key}'`)
-        }
-      }
-
-      initial[operator] = value
-      return initial
-    }, {}) */

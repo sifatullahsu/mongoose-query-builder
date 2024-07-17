@@ -60,12 +60,20 @@ export type Operations =
   | '$lte'
   | '$in'
   | '$nin'
+  | '$not'
   | '$all'
   | '$size'
+  | '$elemMatch'
   | '$exists'
   | '$type'
   | '$regex'
+  | '$options'
   | '$mod'
+  | '$text'
+  | '$bitsAllClear'
+  | '$bitsAllSet'
+  | '$bitsAnyClear'
+  | '$bitsAnySet'
 
 export type Validator<T extends Record<string, unknown>> = (data: {
   key: T
@@ -134,3 +142,18 @@ export type TQueryMaker = (q: ReqQuery, user: User, rules: TAuthRules) => QueryM
 export type TQuerySelector = (q: ReqQuery, rules: TAuthRules) => QuerySelector
 export type TQueryPagination = (page: number, limit: number, count: number) => QueryPagination
 export type TQueryExecutor = (q: ReqQuery, user: User, rules: TAuthRules) => Promise<QueryExecutor>
+export type TBuilder = (q: Record<string, any>[], authRules: TAuthRules, user: User) => Record<string, any>[]
+export type TValueHandler = (data: {
+  value: Record<string, any>[]
+  rules: [string, Operations[]]
+  user: User
+  authRules: TAuthRules
+}) => Record<string, any>
+export type TValueValidator = (data: {
+  key: string
+  operator: Operations
+  value: any
+  rules: [string, Operations[]]
+  user: User
+  authRules: TAuthRules
+}) => void
