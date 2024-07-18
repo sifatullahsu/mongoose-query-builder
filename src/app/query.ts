@@ -1,3 +1,4 @@
+import { authRulesSchema, authRulesTypes } from '../schema'
 import { Query, TQuery } from '../types'
 import { authManager } from '../utils/authManager'
 import { builder } from '../utils/builder'
@@ -30,7 +31,7 @@ export const query: TQuery = (q, user, { authentication, query }) => {
 }
 
 const user = { _id: '', role: '' }
-const serviceAuthRules = {
+const serviceAuthRules: authRulesTypes = {
   authentication: [
     [['admin', 'super_admin'], 'OPEN'],
     [['seller'], ['sellerId']],
@@ -56,8 +57,17 @@ const serviceAuthRules = {
     ['topics', []],
     ['topics.category', []]
   ],
-  validator: data => true
+  validator: () => true,
+  defaultValue: {
+    pagination: {
+      limit: 2
+    }
+  }
 }
+
+const validationResult = authRulesSchema.safeParse(serviceAuthRules)
+
+// console.log(validationResult)
 
 const abc = builder(
   [
@@ -133,4 +143,4 @@ const abc = builder(
   user
 )
 
-console.log(JSON.stringify(abc, null, 2))
+// console.log(JSON.stringify(abc, null, 2))
