@@ -18,25 +18,15 @@ import {
   TQueryPagination,
   TQuerySelector
 } from './types'
-// import { querySchema } from './validation'
-
-// const validationResult = querySchema(
-//   {
-//     page: 2
-//   },
-//   {
-//     pagination: {
-//       limit: 0,
-//       page: 50,
-//       skip: 0,
-//       sort: '_id'
-//     }
-//   }
-// )
-
-// console.log(JSON.stringify(validationResult, null, 2))
 
 const queryMaker: TQueryMaker = (q, user, rules) => {
+  user = {
+    _id: '1',
+    role: 'admin'
+  }
+
+  const abc = {}
+
   return {
     query: query(q, user, { authentication: rules.authentication, query: rules.query }),
     select: select(q.select as string, rules.select, rules.defaultValue?.select),
