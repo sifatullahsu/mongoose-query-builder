@@ -1,4 +1,4 @@
-import { authRulesSchema, authRulesTypes } from '../schema'
+import { authRulesTypes } from '../schema'
 import { Query, TQuery } from '../types'
 import { authManager } from '../utils/authManager'
 import { builder } from '../utils/builder'
@@ -65,7 +65,9 @@ const serviceAuthRules: authRulesTypes = {
   }
 }
 
-const validationResult = authRulesSchema.safeParse(serviceAuthRules)
+const start = performance.now()
+
+// const validationResult = authRulesSchema.safeParse(serviceAuthRules)
 
 // console.log(validationResult)
 
@@ -144,3 +146,7 @@ const abc = builder(
 )
 
 // console.log(JSON.stringify(abc, null, 2))
+
+const duration = performance.now() - start
+
+console.log(duration)
