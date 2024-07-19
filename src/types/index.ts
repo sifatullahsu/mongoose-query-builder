@@ -127,7 +127,7 @@ export type TAuthRules = {
   }
 }
 export type TPagination = (q: ReqQuery, defaultValue?: Partial<Pagination>) => Pagination
-export type TSelect = (input: string, rules: TAuthRules['select'], defaultValue?: string[]) => Select
+export type TSelect = (input: string[], rules: TAuthRules) => Select
 export type TPopulate = (
   input: string | string[],
   rules: TAuthRules['populate'],

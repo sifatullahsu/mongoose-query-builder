@@ -53,7 +53,8 @@ const serviceAuthRules: AuthRules = {
   defaultValue: {
     pagination: {
       limit: 2
-    }
+    },
+    select: ['_id']
   }
 }
 const inputQuery = [
@@ -126,17 +127,19 @@ const inputQuery = [
   }
 ]
 
-const start = performance.now()
+// const start = performance.now()
 
 // const inputResult = inputValidator({ query: inputQuery }, user, serviceAuthRules)
 
 // const result = builder(inputQuery, serviceAuthRules, user)
 // console.log(JSON.stringify(result, null, 2))
 
-const result = query({ query: inputQuery, queryType: '$and' }, user, serviceAuthRules)
+// const result = query({ query: inputQuery, queryType: '$and' }, user, serviceAuthRules)
 
-const duration = performance.now() - start
+// const result = select([], serviceAuthRules)
 
-console.log(duration)
+// const duration = performance.now() - start
+
+// console.log(duration)
 // console.log(JSON.stringify(result, null, 4))
-console.log(result)
+// console.log(result)

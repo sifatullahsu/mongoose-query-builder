@@ -1,6 +1,9 @@
-export const selectFormatter = (input: string[]) => {
+import { TAuthRules } from '../types'
+
+export const selectFormatter = (authRules: TAuthRules) => {
   return {
-    negative: input.length ? '-' + input.join(' -') : '',
-    pipe: input.join('|')
+    pipe: authRules.select.join('|'),
+    negativeReturn: authRules.select.length ? '-' + authRules.select.join(' -') : '',
+    defaultReturn: authRules.defaultValue?.select ? authRules.defaultValue.select.join(' ') : ''
   }
 }
