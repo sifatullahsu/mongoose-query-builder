@@ -20,15 +20,8 @@ import {
 } from './types'
 
 const queryMaker: TQueryMaker = (q, user, rules) => {
-  user = {
-    _id: '1',
-    role: 'admin'
-  }
-
-  const abc = {}
-
   return {
-    query: query(q, user, { authentication: rules.authentication, query: rules.query }),
+    query: query(q, user, rules),
     select: select(q.select as string, rules.select, rules.defaultValue?.select),
     populate: populate(q.populate as string, rules.populate),
     pagination: pagination(q, rules.defaultValue?.pagination)

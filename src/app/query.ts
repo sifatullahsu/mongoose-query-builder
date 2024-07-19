@@ -1,40 +1,29 @@
-import { authRulesTypes, inputValidator } from '../schema'
+import { AuthRules } from '../schema'
 import { Query, TQuery } from '../types'
 import { authManager } from '../utils/authManager'
-import { valueModifier } from '../utils/valueModifier'
+import { builder } from '../utils/builder'
 
-export const query: TQuery = (q, user, { authentication, query }) => {
-  const { auth, authQuery } = authManager(authentication, user)
+export const query: TQuery = (q, user, authRules) => {
+  const { authQuery } = authManager(authRules.authentication, user)
+  const output = builder(q.query as Query[], user, authRules)
 
-  const $and: Query = authQuery ? [authQuery] : []
+  const $and: Query[] = authQuery ? [authQuery] : []
 
-  query.forEach(([key, operations]) => {
-    const validKey = q[key]
-
-    if (validKey) {
-      if (Array.isArray(auth) && auth.includes(key)) return
-
-      for (const queryValue of Array.isArray(validKey) ? validKey : [validKey]) {
-        const [type, value] = queryValue.split(':')
-
-        if (!operations.includes(type)) {
-          throw new Error(`Unauthorized: '${type}' on '${key}'`)
-        }
-
-        $and.push({ [key]: { [type]: valueModifier(type, value) } })
-      }
-    }
-  })
+  if (q.queryType === '$and') {
+    $and.push(...output)
+  } else {
+    $and.push({ [q.queryType as string]: output })
+  }
 
   return $and.length === 0 ? {} : $and.length === 1 ? $and[0] : { $and }
 }
 
 const user = {
   _id: '646c817b303ae9cca93ad11b',
-  role: 'admin',
+  role: 'mentor',
   aditional: 'ss'
 }
-const serviceAuthRules: authRulesTypes = {
+const serviceAuthRules: AuthRules = {
   authentication: [
     [['admin', 'super_admin'], 'OPEN'],
     [['seller'], ['sellerId']],
@@ -139,12 +128,15 @@ const inputQuery = [
 
 const start = performance.now()
 
-const inputResult = inputValidator({ query: inputQuery }, user, serviceAuthRules)
+// const inputResult = inputValidator({ query: inputQuery }, user, serviceAuthRules)
 
 // const result = builder(inputQuery, serviceAuthRules, user)
 // console.log(JSON.stringify(result, null, 2))
 
+const result = query({ query: inputQuery, queryType: '$and' }, user, serviceAuthRules)
+
 const duration = performance.now() - start
 
 console.log(duration)
-// console.log(JSON.stringify(inputResult, null, 2))
+// console.log(JSON.stringify(result, null, 4))
+console.log(result)

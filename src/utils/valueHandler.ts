@@ -27,7 +27,7 @@ export const valueHandler: TValueHandler = ({ value, rules, user, authRules }) =
         throw new Error(`Empty operation found for '${operator}' on '${key}'.`)
       }
       if (operator === '$elemMatch' && !Array.isArray(value[0])) {
-        const result = builder(value, authRules, user).reduce((prev, item) => {
+        const result = builder(value, user, authRules).reduce((prev, item) => {
           for (const key in item) {
             const _key = key.split('.')[1]
 

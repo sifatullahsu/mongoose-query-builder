@@ -133,16 +133,12 @@ export type TPopulate = (
   rules: TAuthRules['populate'],
   defaultValue?: [string, string[]][]
 ) => Populate[]
-export type TQuery = (
-  elements: ReqQuery,
-  user: User,
-  rules: Pick<TAuthRules, 'authentication' | 'query'>
-) => Query
+export type TQuery = (q: ReqQuery, user: User, rules: TAuthRules) => Query
 export type TQueryMaker = (q: ReqQuery, user: User, rules: TAuthRules) => QueryMaker
 export type TQuerySelector = (q: ReqQuery, rules: TAuthRules) => QuerySelector
 export type TQueryPagination = (page: number, limit: number, count: number) => QueryPagination
 export type TQueryExecutor = (q: ReqQuery, user: User, rules: TAuthRules) => Promise<QueryExecutor>
-export type TBuilder = (q: Record<string, any>[], authRules: TAuthRules, user: User) => Record<string, any>[]
+export type TBuilder = (q: ReqQuery[], user: User, authRules: TAuthRules) => Query[]
 export type TValueHandler = (data: {
   value: Record<string, any>[]
   rules: [string, Operations[]]

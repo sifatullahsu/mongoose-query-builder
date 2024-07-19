@@ -4,7 +4,7 @@ import { valueHandler } from './valueHandler'
 
 type TRecord = Record<string, any>
 
-export const builder: TBuilder = (q, authRules, user) => {
+export const builder: TBuilder = (q, user, authRules) => {
   const result = q.reduce((query: TRecord[], element: TRecord): TRecord[] => {
     const keys = Object.keys(element)
     const key = keys[0]
@@ -22,7 +22,7 @@ export const builder: TBuilder = (q, authRules, user) => {
         throw new Error(`Empty operation found for key: '${key}'`)
       }
 
-      const result = builder(value, authRules, user)
+      const result = builder(value, user, authRules)
 
       query.push({ [key]: result })
       return query
