@@ -139,8 +139,17 @@ type PopulateV2 = {
 
 type PopulateV3 = {
   path: string
-  select: [string[], string[]]
+  select: {
+    protected: string[]
+    default: string[]
+    additional?: {
+      roles: string[]
+      protected: string[]
+      default: string[]
+    }[]
+  }
   populate: PopulateV3
+  roles?: string[]
 }[]
 
 export type PopulateV4 = {
@@ -151,7 +160,7 @@ export type PopulateV4 = {
 
 export type TPagination = (q: Partial<Pagination>, defaultValue?: Partial<Pagination>) => Pagination
 export type TSelect = (input: string[], user: User, rules: TAuthRules['select']) => Select
-export type TPopulate = (input: PopulateV2[], rules: TAuthRules['populate']) => PopulateV4[]
+export type TPopulate = (input: PopulateV2[], user: User, rules: TAuthRules['populate']) => PopulateV4[]
 export type TQuery = (q: ReqQuery, user: User, rules: TAuthRules) => Query
 export type TQueryMaker = (q: ReqQuery, user: User, rules: TAuthRules) => QueryMaker
 export type TQuerySelector = (q: ReqQuery, rules: TAuthRules) => QuerySelector
