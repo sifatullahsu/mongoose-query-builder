@@ -111,12 +111,12 @@ export type TValidator = (data: {
   key: string
   operator: Operations
   value: any
-  rules: [string, Operations[]]
+  rules: [string, Operations[], 'OPEN' | string[]]
   user: User
 }) => boolean
 export type TAuthRules = {
   authentication: 'OPEN' | [string[], 'OPEN' | string[]][]
-  query: [string, Operations[], string[]][]
+  query: [string, Operations[], 'OPEN' | string[]][]
   select: {
     protected: string[]
     default: string[]
@@ -163,7 +163,7 @@ export type TSelect = (input: string[], user: User, rules: TAuthRules['select'])
 export type TPopulate = (input: PopulateV2[], user: User, rules: TAuthRules['populate']) => PopulateV4[]
 export type TQuery = (q: ReqQuery, user: User, rules: TAuthRules) => Query
 export type TQueryMaker = (q: ReqQuery, user: User, rules: TAuthRules) => QueryMaker
-export type TQuerySelector = (q: ReqQuery, rules: TAuthRules) => QuerySelector
+export type TQuerySelector = (q: ReqQuery, user: User, rules: TAuthRules) => QuerySelector
 export type TQueryPagination = (page: number, limit: number, count: number) => QueryPagination
 export type TQueryExecutor = (q: ReqQuery, user: User, rules: TAuthRules) => Promise<QueryExecutor>
 export type TBuilder = (q: ReqQuery[], user: User, authRules: TAuthRules) => Query[]
@@ -177,7 +177,7 @@ export type TValueValidator = (data: {
   key: string
   operator: Operations
   value: any
-  rules: [string, Operations[]]
+  rules: [string, Operations[], 'OPEN' | string[]]
   user: User
   authRules: TAuthRules
 }) => void

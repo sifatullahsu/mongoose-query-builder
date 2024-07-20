@@ -28,10 +28,10 @@ const queryMaker: TQueryMaker = (q, user, rules) => {
   }
 }
 
-const querySelector: TQuerySelector = (q, rules) => {
+const querySelector: TQuerySelector = (q, user, rules) => {
   return {
-    select: select(q.select, rules.select),
-    populate: populate(q.populate, rules.populate)
+    select: select(q.select, user, rules.select),
+    populate: populate(q.populate, user, rules.populate)
   }
 }
 
