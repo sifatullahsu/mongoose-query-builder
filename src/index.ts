@@ -22,16 +22,16 @@ import {
 const queryMaker: TQueryMaker = (q, user, rules) => {
   return {
     query: query(q, user, rules),
-    select: select(q.select as string[], rules),
-    populate: populate(q.populate as string, rules.populate),
-    pagination: pagination(q, rules.defaultValue?.pagination)
+    select: select(q.select, rules.select),
+    populate: populate(q.populate, rules.populate),
+    pagination: pagination(q.pagination, rules?.pagination)
   }
 }
 
 const querySelector: TQuerySelector = (q, rules) => {
   return {
-    select: select(q.select as string[], rules),
-    populate: populate(q.populate as string, rules.populate)
+    select: select(q.select, rules.select),
+    populate: populate(q.populate, rules.populate)
   }
 }
 

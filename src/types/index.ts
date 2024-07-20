@@ -119,12 +119,8 @@ export type TAuthRules = {
   query: [string, Operations[]][]
   select: [string[], string[]]
   populate: PopulateV3
+  pagination?: Partial<Pagination>
   validator?: TValidator
-  defaultValue?: {
-    pagination?: Partial<Pagination>
-    // select?: string[]
-    // populate?: [string, string[]][]
-  }
 }
 
 type PopulateV2 = {
@@ -145,7 +141,7 @@ export type PopulateV4 = {
   populate: PopulateV4[]
 }
 
-export type TPagination = (q: ReqQuery, defaultValue?: Partial<Pagination>) => Pagination
+export type TPagination = (q: Partial<Pagination>, defaultValue?: Partial<Pagination>) => Pagination
 export type TSelect = (input: string[], rules: TAuthRules['select']) => Select
 export type TPopulate = (input: PopulateV2[], rules: TAuthRules['populate']) => PopulateV4[]
 export type TQuery = (q: ReqQuery, user: User, rules: TAuthRules) => Query
