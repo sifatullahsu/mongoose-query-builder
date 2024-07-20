@@ -32,7 +32,7 @@ const authenticationSchema = z
   .enum(['OPEN'])
   .or(z.array(z.tuple([z.array(z.string()).nonempty(), z.enum(['OPEN']).or(z.array(z.string()).nonempty())])))
 const querySchema = z.array(z.tuple([z.string(), z.array(operatorSchema).nonempty()]))
-const selectSchema = z.array(z.string())
+const selectSchema = z.tuple([z.array(z.string()), z.array(z.string())])
 const populateSchema = z.array(z.tuple([z.string(), selectSchema, selectSchema]))
 // const populateSchema = z.array(
 //   z.object({
@@ -66,7 +66,7 @@ export const authRulesSchema = z.object({
   populate: populateSchema,
   defaultValue: z
     .object({
-      select: selectSchema,
+      // select: selectSchema,
       populate: z.array(z.string()),
       pagination: paginationSchema.partial()
     })

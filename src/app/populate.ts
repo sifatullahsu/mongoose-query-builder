@@ -57,18 +57,8 @@ const input: [string, string[]][] = [
 const profileAuthRules: AuthRules = {
   authentication: 'OPEN',
   query: [],
-  select: ['nid', 'address'],
-  populate: [
-    ['mentor', ['password'], ['_id']],
-    ['category', [], ['_id']],
-    ['topics.category', [], []],
-    ['topics', [], []]
-  ],
-  validator: () => true,
-  defaultValue: {
-    populate: ['user'],
-    select: ['_id']
-  }
+  select: [['nid', 'address'], ['_id']],
+  populate: []
 }
 
 const result = populate(input, profileAuthRules)

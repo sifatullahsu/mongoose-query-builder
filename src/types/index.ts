@@ -117,12 +117,12 @@ export type TValidator = (data: {
 export type TAuthRules = {
   authentication: 'OPEN' | [string[], 'OPEN' | string[]][]
   query: [string, Operations[]][]
-  select: string[]
+  select: [string[], string[]]
   populate: [string, string[], string[]][]
   validator?: TValidator
   defaultValue?: {
     pagination?: Partial<Pagination>
-    select?: string[]
+    // select?: string[]
     populate?: [string, string[]][]
   }
 }
