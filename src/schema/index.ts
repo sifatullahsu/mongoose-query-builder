@@ -31,14 +31,32 @@ const operatorSchema = z.enum([
 const authenticationSchema = z
   .enum(['OPEN'])
   .or(z.array(z.tuple([z.array(z.string()).nonempty(), z.enum(['OPEN']).or(z.array(z.string()).nonempty())])))
-const querySchema = z.array(z.tuple([z.string(), z.array(operatorSchema).nonempty()]))
-const selectSchema = z.tuple([z.array(z.string()), z.array(z.string())])
-// const populateSchema = z.array(z.tuple([z.string(), selectSchema, selectSchema]))
+const querySchema = z.array(
+  z.tuple([
+    z.string(),
+    z.array(operatorSchema).nonempty(),
+    z.enum(['OPEN']).or(z.array(z.string()).nonempty())
+  ])
+)
+const selectSchema = z.object({
+  protected: z.array(z.string()),
+  default: z.array(z.string()),
+  additional: z
+    .array(
+      z.object({
+        roles: z.array(z.string()).nonempty(),
+        protected: z.array(z.string()),
+        default: z.array(z.string())
+      })
+    )
+    .optional()
+})
 const populateSchema = z.array(
   z.object({
     path: z.string(),
-    select: selectSchema.optional()
-    // populate: populateSchema
+    select: selectSchema.optional(),
+    // populate: populateSchema.optional(),
+    roles: z.array(z.string()).nonempty().optional()
   })
 )
 const pageSchema = z.number().int().positive()
@@ -64,15 +82,9 @@ export const authRulesSchema = z.object({
   query: querySchema,
   select: selectSchema,
   populate: populateSchema,
-  defaultValue: z
-    .object({
-      // select: selectSchema,
-      // populate: z.array(z.string()),
-      pagination: paginationSchema.partial()
-    })
-    .partial()
-    .optional(),
-  validator: z.function().returns(z.boolean()).optional()
+  pagination: paginationSchema.partial(),
+  validator: z.function().returns(z.boolean()).optional(),
+  disableQueryType: z.enum(['$or', '$nor']).optional()
 })
 
 export const queryInputSchema = z.object({
@@ -83,7 +95,7 @@ export const queryInputSchema = z.object({
   select: selectSchema.optional(),
   populate: populateSchema.optional(),
   query: z.array(z.any()).default([]),
-  queryType: z.enum(['$and', '$or', '$not']).default('$and'),
+  queryType: z.enum(['$and', '$or', '$nor']).default('$and'),
   findOne: z.boolean().default(false)
 })
 
