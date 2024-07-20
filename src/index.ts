@@ -22,7 +22,7 @@ import {
 const queryMaker: TQueryMaker = (q, user, rules) => {
   return {
     query: query(q, user, rules),
-    select: select(q.select, rules.select),
+    select: select(q.select, user, rules.select),
     populate: populate(q.populate, rules.populate),
     pagination: pagination(q.pagination, rules?.pagination)
   }

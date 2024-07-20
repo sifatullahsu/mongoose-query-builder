@@ -117,7 +117,15 @@ export type TValidator = (data: {
 export type TAuthRules = {
   authentication: 'OPEN' | [string[], 'OPEN' | string[]][]
   query: [string, Operations[]][]
-  select: [string[], string[]]
+  select: {
+    protected: string[]
+    default: string[]
+    additional?: {
+      roles: string[]
+      protected: string[]
+      default: string[]
+    }[]
+  }
   populate: PopulateV3
   pagination?: Partial<Pagination>
   validator?: TValidator
@@ -142,7 +150,7 @@ export type PopulateV4 = {
 }
 
 export type TPagination = (q: Partial<Pagination>, defaultValue?: Partial<Pagination>) => Pagination
-export type TSelect = (input: string[], rules: TAuthRules['select']) => Select
+export type TSelect = (input: string[], user: User, rules: TAuthRules['select']) => Select
 export type TPopulate = (input: PopulateV2[], rules: TAuthRules['populate']) => PopulateV4[]
 export type TQuery = (q: ReqQuery, user: User, rules: TAuthRules) => Query
 export type TQueryMaker = (q: ReqQuery, user: User, rules: TAuthRules) => QueryMaker

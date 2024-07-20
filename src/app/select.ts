@@ -1,19 +1,19 @@
 import { TSelect } from '../types'
 import { selectFormatter } from '../utils/selectFormatter'
 
-export const select: TSelect = (input = [], selectRules) => {
-  const { pipe, negativeReturn, defaultReturn } = selectFormatter(selectRules)
+export const select: TSelect = (input = [], user, selectRules) => {
+  const { pipe, protectedReturn, defaultReturn } = selectFormatter(user, selectRules)
 
-  for (const i of selectRules[0]) {
+  for (const i of selectRules.protected) {
     if (i.startsWith(' ') || i.endsWith(' ') || i.startsWith('+') || i.startsWith('-')) {
       throw new Error(`AuthRules: Invalid key '${i}' found in 'authRules.select'`)
     }
   }
-  for (const i of selectRules[1]) {
+  for (const i of selectRules.default) {
     if (i.startsWith(' ') || i.endsWith(' ') || i.startsWith('+') || i.startsWith('-')) {
       throw new Error(`AuthRules: Invalid key '${i}' found in 'authRules.defaultValue.select'`)
     }
-    if (selectRules[0].includes(i)) {
+    if (selectRules.protected.includes(i)) {
       throw new Error(`Duplicate key found: '${i}' in 'authRules.defaultValue.select'`)
     }
   }
@@ -26,8 +26,8 @@ export const select: TSelect = (input = [], selectRules) => {
   let isNegativeId: boolean = false
 
   if (input.length) {
-    if (selectRules[1] && selectRules[1].length && input.length === 1 && input[0] === '*') {
-      return negativeReturn
+    if (selectRules.default && selectRules.default.length && input.length === 1 && input[0] === '*') {
+      return protectedReturn
     }
 
     const result = input
@@ -62,14 +62,14 @@ export const select: TSelect = (input = [], selectRules) => {
       .trim()
 
     if (!added.length) {
-      return defaultReturn || negativeReturn
+      return defaultReturn || protectedReturn
     }
     if (isPositive || isPositiveId) {
       return result
     }
 
-    return `${result} ${negativeReturn}`.trim()
+    return `${result} ${protectedReturn}`.trim()
   }
 
-  return defaultReturn || negativeReturn
+  return defaultReturn || protectedReturn
 }
