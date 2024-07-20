@@ -116,7 +116,7 @@ export type TValidator = (data: {
 }) => boolean
 export type TAuthRules = {
   authentication: 'OPEN' | [string[], 'OPEN' | string[]][]
-  query: [string, Operations[]][]
+  query: [string, Operations[], string[]][]
   select: {
     protected: string[]
     default: string[]
@@ -169,7 +169,7 @@ export type TQueryExecutor = (q: ReqQuery, user: User, rules: TAuthRules) => Pro
 export type TBuilder = (q: ReqQuery[], user: User, authRules: TAuthRules) => Query[]
 export type TValueHandler = (data: {
   value: Record<string, any>[]
-  rules: [string, Operations[]]
+  rules: [string, Operations[], 'OPEN' | string[]]
   user: User
   authRules: TAuthRules
 }) => Record<string, any>
