@@ -59,6 +59,18 @@ const populateSchema = z.array(
     roles: z.array(z.string()).nonempty().optional()
   })
 )
+const validatorSchema = z.function().returns(z.boolean())
+const queryTypeSchema = z.object({
+  disabled: z.array(z.enum(['$or', '$nor'])),
+  additional: z
+    .array(
+      z.object({
+        roles: z.array(z.string()).nonempty(),
+        disabled: z.array(z.enum(['$or', '$nor']))
+      })
+    )
+    .optional()
+})
 const pageSchema = z.number().int().positive()
 const limitSchema = z.number().int().positive()
 const skipSchema = z.number().int().nonnegative()
@@ -83,8 +95,8 @@ export const authRulesSchema = z.object({
   select: selectSchema,
   populate: populateSchema,
   pagination: paginationSchema.partial(),
-  validator: z.function().returns(z.boolean()).optional(),
-  disableQueryType: z.enum(['$or', '$nor']).optional()
+  validator: validatorSchema.optional(),
+  queryType: queryTypeSchema.optional()
 })
 
 export const queryInputSchema = z.object({
@@ -92,8 +104,16 @@ export const queryInputSchema = z.object({
   limit: limitSchema.optional(),
   skip: skipSchema.optional(),
   sort: sortSchema.optional(),
-  select: selectSchema.optional(),
-  populate: populateSchema.optional(),
+  select: z.array(z.string()).optional(),
+  populate: z
+    .array(
+      z.object({
+        path: z.string()
+        // select:  ------ SELF
+        // populate:   ------ SELF
+      })
+    )
+    .optional(),
   query: z.array(z.any()).default([]),
   queryType: z.enum(['$and', '$or', '$nor']).default('$and'),
   findOne: z.boolean().default(false)

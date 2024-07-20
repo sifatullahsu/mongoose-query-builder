@@ -18,6 +18,21 @@ export const builder: TBuilder = (q, user, authRules) => {
     }
 
     if (['$and', '$or', '$nor'].includes(key)) {
+      if (authRules.queryType) {
+        let disabled = authRules.queryType.disabled
+
+        if (user && authRules.queryType.additional && authRules.queryType.additional.length) {
+          const result = authRules.queryType.additional.find(i => i.roles.includes(user.role))
+
+          if (result) {
+            disabled = result.disabled
+          }
+        }
+
+        if (disabled.includes(key as '$or' | '$nor')) {
+          throw new Error(`The '${key}' operator has been disabled.`)
+        }
+      }
       if (!value.length) {
         throw new Error(`Empty operation found for key: '${key}'`)
       }

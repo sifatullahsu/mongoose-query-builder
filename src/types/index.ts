@@ -129,6 +129,13 @@ export type TAuthRules = {
   populate: PopulateV3
   pagination?: Partial<Pagination>
   validator?: TValidator
+  queryType?: {
+    disabled: ('$or' | '$nor')[]
+    additional?: {
+      roles: string[]
+      disabled: ('$or' | '$nor')[]
+    }[]
+  }
 }
 
 type PopulateV2 = {
