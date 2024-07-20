@@ -33,7 +33,14 @@ const authenticationSchema = z
   .or(z.array(z.tuple([z.array(z.string()).nonempty(), z.enum(['OPEN']).or(z.array(z.string()).nonempty())])))
 const querySchema = z.array(z.tuple([z.string(), z.array(operatorSchema).nonempty()]))
 const selectSchema = z.array(z.string())
-const populateSchema = z.array(z.tuple([z.string(), selectSchema]))
+const populateSchema = z.array(z.tuple([z.string(), selectSchema, selectSchema]))
+// const populateSchema = z.array(
+//   z.object({
+//     path: z.string(),
+//     select: selectSchema.optional(),
+//     populate: populateSchema.optional()
+//   })
+// )
 const pageSchema = z.number().int().positive()
 const limitSchema = z.number().int().positive()
 const skipSchema = z.number().int().nonnegative()
@@ -60,7 +67,7 @@ export const authRulesSchema = z.object({
   defaultValue: z
     .object({
       select: selectSchema,
-      populate: populateSchema,
+      populate: z.array(z.string()),
       pagination: paginationSchema.partial()
     })
     .partial()

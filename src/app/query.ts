@@ -44,17 +44,18 @@ const serviceAuthRules: AuthRules = {
   ],
   select: ['password', 'contact'],
   populate: [
-    ['mentor', ['password']],
-    ['category', []],
-    ['topics', []],
-    ['topics.category', []]
+    ['mentor', ['password'], []],
+    ['category', [], []],
+    ['topics', [], []],
+    ['topics.category', [], []]
   ],
   validator: () => true,
   defaultValue: {
     pagination: {
       limit: 2
     },
-    select: ['_id']
+    select: ['_id'],
+    populate: []
   }
 }
 const inputQuery = [

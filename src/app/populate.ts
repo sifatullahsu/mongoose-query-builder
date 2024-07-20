@@ -1,23 +1,28 @@
+import { AuthRules } from '../schema'
 import { Populate, TPopulate } from '../types'
 import { select } from './select'
 
-export const populate: TPopulate = (input, populate, defaultValue) => {
-  if (!input) return []
-  if (typeof input === 'string') input = [input]
+export const populate: TPopulate = (input = [], authRules) => {
+  if (!input.length) return []
 
   const output: Populate[] = []
   const stack: Populate[] = []
 
-  console.log(defaultValue)
-
   for (const item of input) {
-    const [key, value] = item.split(':')
-    const currentPopulate = populate.find(item => item[0] === key)
+    const [key, value] = item
+    const currentPopulate = authRules.populate.find(item => item[0] === key)
 
     if (currentPopulate) {
       const obj = {
         path: key,
-        select: select(value, currentPopulate[1]),
+        select: select(value, {
+          ...authRules,
+          select: currentPopulate[1],
+          defaultValue: {
+            ...authRules.defaultValue,
+            select: currentPopulate[2]
+          }
+        }),
         populate: []
       }
 
@@ -39,4 +44,39 @@ export const populate: TPopulate = (input, populate, defaultValue) => {
   }
 
   return output
+}
+
+const input: [string, string[]][] = [
+  ['mentor', ['password']],
+  ['category', ['title']],
+  ['user', []],
+  ['topics', []],
+  ['topics.category', []]
+]
+
+const profileAuthRules: AuthRules = {
+  authentication: 'OPEN',
+  query: [],
+  select: ['nid', 'address'],
+  populate: [
+    ['mentor', ['password'], ['_id']],
+    ['category', [], ['_id']],
+    ['topics.category', [], []],
+    ['topics', [], []]
+  ],
+  validator: () => true,
+  defaultValue: {
+    populate: ['user'],
+    select: ['_id']
+  }
+}
+
+const result = populate(input, profileAuthRules)
+
+console.log(JSON.stringify(result, null, 2))
+
+const pi = {
+  path: 'category',
+  select: [[], []],
+  populate: []
 }
