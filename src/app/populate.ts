@@ -1,72 +1,22 @@
-import { AuthRules } from '../schema'
-import { Populate, TPopulate } from '../types'
+import { PopulateV4, TPopulate } from '../types'
 import { select } from './select'
 
-export const populate: TPopulate = (input = [], authRules) => {
-  if (!input.length) return []
+export const populate: TPopulate = (input, populateRules) => {
+  const result = input.reduce((prev: PopulateV4[], item) => {
+    const rules = populateRules.find(i => i.path === item.path)
 
-  const output: Populate[] = []
-  const stack: Populate[] = []
-
-  for (const item of input) {
-    const [key, value] = item
-    const currentPopulate = authRules.populate.find(item => item[0] === key)
-
-    if (currentPopulate) {
-      const obj = {
-        path: key,
-        select: select(value, {
-          ...authRules,
-          select: currentPopulate[1],
-          defaultValue: {
-            ...authRules.defaultValue,
-            select: currentPopulate[2]
-          }
-        }),
-        populate: []
+    if (rules) {
+      const result = {
+        path: item.path,
+        select: select(item.select ?? [], rules.select),
+        populate: populate(item.populate ?? [], rules.populate)
       }
 
-      // nested element
-      const parentPath = key.split('.').slice(0, -1).join('.')
-      const parent = stack.find(item => item.path === parentPath)
-      if (parent) {
-        parent.populate.push({ ...obj, path: key.split('.').slice(-1).join('') })
-        stack.push(obj)
-      }
-
-      // top-level element || nested element but who does not have parent
-      else {
-        output.push(obj)
-        stack.length = 0
-        stack.push(obj)
-      }
+      prev.push(result)
     }
-  }
 
-  return output
-}
+    return prev
+  }, [])
 
-const input: [string, string[]][] = [
-  ['mentor', ['password']],
-  ['category', ['title']],
-  ['user', []],
-  ['topics', []],
-  ['topics.category', []]
-]
-
-const profileAuthRules: AuthRules = {
-  authentication: 'OPEN',
-  query: [],
-  select: [['nid', 'address'], ['_id']],
-  populate: []
-}
-
-const result = populate(input, profileAuthRules)
-
-console.log(JSON.stringify(result, null, 2))
-
-const pi = {
-  path: 'category',
-  select: [[], []],
-  populate: []
+  return result
 }

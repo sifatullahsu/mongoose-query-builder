@@ -1,19 +1,19 @@
 import { TSelect } from '../types'
 import { selectFormatter } from '../utils/selectFormatter'
 
-export const select: TSelect = (input = [], authRules) => {
-  const { pipe, negativeReturn, defaultReturn } = selectFormatter(authRules)
+export const select: TSelect = (input = [], selectRules) => {
+  const { pipe, negativeReturn, defaultReturn } = selectFormatter(selectRules)
 
-  for (const i of authRules.select[0]) {
+  for (const i of selectRules[0]) {
     if (i.startsWith(' ') || i.endsWith(' ') || i.startsWith('+') || i.startsWith('-')) {
       throw new Error(`AuthRules: Invalid key '${i}' found in 'authRules.select'`)
     }
   }
-  for (const i of authRules.select[1]) {
+  for (const i of selectRules[1]) {
     if (i.startsWith(' ') || i.endsWith(' ') || i.startsWith('+') || i.startsWith('-')) {
       throw new Error(`AuthRules: Invalid key '${i}' found in 'authRules.defaultValue.select'`)
     }
-    if (authRules.select[0].includes(i)) {
+    if (selectRules[0].includes(i)) {
       throw new Error(`Duplicate key found: '${i}' in 'authRules.defaultValue.select'`)
     }
   }
@@ -26,7 +26,7 @@ export const select: TSelect = (input = [], authRules) => {
   let isNegativeId: boolean = false
 
   if (input.length) {
-    if (authRules.select[1] && authRules.select[1].length && input.length === 1 && input[0] === '*') {
+    if (selectRules[1] && selectRules[1].length && input.length === 1 && input[0] === '*') {
       return negativeReturn
     }
 

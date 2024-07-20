@@ -118,17 +118,36 @@ export type TAuthRules = {
   authentication: 'OPEN' | [string[], 'OPEN' | string[]][]
   query: [string, Operations[]][]
   select: [string[], string[]]
-  populate: [string, string[], string[]][]
+  populate: PopulateV3
   validator?: TValidator
   defaultValue?: {
     pagination?: Partial<Pagination>
     // select?: string[]
-    populate?: [string, string[]][]
+    // populate?: [string, string[]][]
   }
 }
+
+type PopulateV2 = {
+  path: string
+  select?: string[]
+  populate?: PopulateV2[]
+}
+
+type PopulateV3 = {
+  path: string
+  select: [string[], string[]]
+  populate: PopulateV3
+}[]
+
+export type PopulateV4 = {
+  path: string
+  select: string
+  populate: PopulateV4[]
+}
+
 export type TPagination = (q: ReqQuery, defaultValue?: Partial<Pagination>) => Pagination
-export type TSelect = (input: string[], rules: TAuthRules) => Select
-export type TPopulate = (input: [string, string[]][], rules: TAuthRules) => Populate[]
+export type TSelect = (input: string[], rules: TAuthRules['select']) => Select
+export type TPopulate = (input: PopulateV2[], rules: TAuthRules['populate']) => PopulateV4[]
 export type TQuery = (q: ReqQuery, user: User, rules: TAuthRules) => Query
 export type TQueryMaker = (q: ReqQuery, user: User, rules: TAuthRules) => QueryMaker
 export type TQuerySelector = (q: ReqQuery, rules: TAuthRules) => QuerySelector
