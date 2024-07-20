@@ -111,12 +111,18 @@ export type TValidator = (data: {
   key: string
   operator: Operations
   value: any
-  rules: [string, Operations[], 'OPEN' | string[]]
+  rules: [string, Operations[]]
   user: User
 }) => boolean
 export type TAuthRules = {
   authentication: 'OPEN' | [string[], 'OPEN' | string[]][]
-  query: [string, Operations[], 'OPEN' | string[]][]
+  query: {
+    fields: [string, Operations[]][]
+    additional?: {
+      roles: string[]
+      fields: [string, Operations[]][]
+    }[]
+  }
   select: {
     protected: string[]
     default: string[]
@@ -176,7 +182,7 @@ export type TQueryExecutor = (q: ReqQuery, user: User, rules: TAuthRules) => Pro
 export type TBuilder = (q: ReqQuery[], user: User, authRules: TAuthRules) => Query[]
 export type TValueHandler = (data: {
   value: Record<string, any>[]
-  rules: [string, Operations[], 'OPEN' | string[]]
+  rules: [string, Operations[]]
   user: User
   authRules: TAuthRules
 }) => Record<string, any>
@@ -184,7 +190,7 @@ export type TValueValidator = (data: {
   key: string
   operator: Operations
   value: any
-  rules: [string, Operations[], 'OPEN' | string[]]
+  rules: [string, Operations[]]
   user: User
   authRules: TAuthRules
 }) => void

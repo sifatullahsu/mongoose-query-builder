@@ -3,11 +3,7 @@ import { builder } from './builder'
 import { valueValidator } from './valueValidator'
 
 export const valueHandler: TValueHandler = ({ value, rules, user, authRules }) => {
-  const [key, allowedOperators, access] = rules
-
-  if (Array.isArray(access) && (!user || !access.includes(user.role))) {
-    throw new Error(`Unauthorized access on '${key}'`)
-  }
+  const [key, allowedOperators] = rules
 
   const result = value.reduce((initial, item) => {
     if (!Array.isArray(item) || item.length !== 2) {

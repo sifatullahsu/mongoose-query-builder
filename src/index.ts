@@ -24,7 +24,7 @@ const queryMaker: TQueryMaker = (q, user, rules) => {
     query: query(q, user, rules),
     select: select(q.select, user, rules.select),
     populate: populate(q.populate, user, rules.populate),
-    pagination: pagination(q.pagination, rules?.pagination)
+    pagination: pagination(q, rules?.pagination)
   }
 }
 

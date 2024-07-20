@@ -28,23 +28,29 @@ const operatorSchema = z.enum([
   '$bitsAnyClear',
   '$bitsAnySet'
 ])
+const fieldSchema = z.tuple([z.string(), z.array(operatorSchema).nonempty()])
+const rolesSchema = z.array(z.string()).nonempty()
 const authenticationSchema = z
   .enum(['OPEN'])
   .or(z.array(z.tuple([z.array(z.string()).nonempty(), z.enum(['OPEN']).or(z.array(z.string()).nonempty())])))
-const querySchema = z.array(
-  z.tuple([
-    z.string(),
-    z.array(operatorSchema).nonempty(),
-    z.enum(['OPEN']).or(z.array(z.string()).nonempty())
-  ])
-)
+const querySchema = z.object({
+  fields: z.array(fieldSchema),
+  additional: z
+    .array(
+      z.object({
+        roles: rolesSchema,
+        fields: z.array(fieldSchema) // ------ SELF
+      })
+    )
+    .optional()
+})
 const selectSchema = z.object({
   protected: z.array(z.string()),
   default: z.array(z.string()),
   additional: z
     .array(
       z.object({
-        roles: z.array(z.string()).nonempty(),
+        roles: rolesSchema,
         protected: z.array(z.string()),
         default: z.array(z.string())
       })
@@ -56,7 +62,7 @@ const populateSchema = z.array(
     path: z.string(),
     select: selectSchema.optional(),
     // populate: populateSchema.optional(),
-    roles: z.array(z.string()).nonempty().optional()
+    roles: rolesSchema.optional()
   })
 )
 const validatorSchema = z.function().returns(z.boolean())
@@ -65,7 +71,7 @@ const queryTypeSchema = z.object({
   additional: z
     .array(
       z.object({
-        roles: z.array(z.string()).nonempty(),
+        roles: rolesSchema,
         disabled: z.array(z.enum(['$or', '$nor']))
       })
     )

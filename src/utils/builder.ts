@@ -43,7 +43,19 @@ export const builder: TBuilder = (q, user, authRules) => {
       return query
     }
 
-    const rules = authRules.query.find(i => i[0] === key)
+    let rules = authRules.query.fields.find(i => i[0] === key)
+
+    if (user && authRules.query.additional && authRules.query.additional.length) {
+      const result = authRules.query.additional.find(i => i.roles.includes(user.role))
+
+      if (result) {
+        const isAvailable = result.fields.find(i => i[0] === key)
+
+        if (isAvailable) {
+          rules = isAvailable
+        }
+      }
+    }
 
     if (!rules) {
       throw new Error(`Unauthorized access: '${key}'.`)
