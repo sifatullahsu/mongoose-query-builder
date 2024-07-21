@@ -184,7 +184,12 @@ export type TQuery = (q: ReqQuery, user: User, rules: TAuthRules) => Query
 export type TQueryMaker = (q: ReqQuery, user: User, rules: TAuthRules) => QueryMaker
 export type TQuerySelector = (q: ReqQuery, user: User, rules: TAuthRules) => QuerySelector
 export type TQueryPagination = (data: { page: number; limit: number; count: number }) => QueryPagination
-export type TQueryExecutor = (q: ReqQuery, user: User, rules: TAuthRules) => Promise<QueryExecutor>
+export type TQueryExecutor = (
+  q: ReqQuery,
+  user: User,
+  rules: TAuthRules,
+  options?: Record<string, any>
+) => Promise<QueryExecutor>
 export type TBuilder = (q: ReqQuery[], user: User, authRules: TAuthRules) => Query[]
 export type TValueHandler = (data: {
   value: Record<string, any>[]
