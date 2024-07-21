@@ -24,7 +24,8 @@ const queryMaker: TQueryMaker = (q, user, rules) => {
     query: query(q, user, rules),
     select: select(q.select, user, rules.select),
     populate: populate(q.populate, user, rules.populate),
-    pagination: pagination(q, rules?.pagination)
+    pagination: pagination(q, rules?.pagination),
+    findOne: q.findOne as boolean
   }
 }
 
@@ -35,7 +36,7 @@ const querySelector: TQuerySelector = (q, user, rules) => {
   }
 }
 
-const queryPagination: TQueryPagination = (page, limit, count) => {
+const queryPagination: TQueryPagination = ({ page, limit, count }) => {
   return {
     current: page,
     total: Math.ceil(count / limit),
@@ -48,15 +49,24 @@ const queryPagination: TQueryPagination = (page, limit, count) => {
 const queryExecutor: TQueryExecutor = async function (this: any, q, user, rules) {
   const queryResult = queryMaker(q, user, rules)
 
-  const { query, pagination, populate, select } = queryResult
+  const { query, pagination, populate, select, findOne } = queryResult
   const { page, limit, skip, sort } = pagination
+
+  if (findOne) {
+    const result = this.findOne(query, select, { populate })
+
+    return {
+      data: result,
+      executes: queryResult
+    }
+  }
 
   const [result, count] = await Promise.all([
     this.find(query, select, { limit, skip, sort, populate }),
     this.countDocuments(query)
   ])
 
-  const paginationResult = queryPagination(page, limit, count)
+  const paginationResult = queryPagination({ page, limit, count })
 
   return {
     data: result,
