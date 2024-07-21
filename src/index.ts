@@ -51,8 +51,10 @@ const queryExecutor: TQueryExecutor = async function (this: any, q, user, rules)
   const { query, pagination, populate, select } = queryResult
   const { page, limit, skip, sort } = pagination
 
-  const result = await this.find(query, select, { limit, skip, sort, populate })
-  const count = await this.countDocuments(query)
+  const [result, count] = await Promise.all([
+    this.find(query, select, { limit, skip, sort, populate }),
+    this.countDocuments(query)
+  ])
 
   const paginationResult = queryPagination(page, limit, count)
 
