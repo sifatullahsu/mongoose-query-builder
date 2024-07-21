@@ -100,15 +100,45 @@ export type NestedKey<O extends Record<string, unknown>, ProcessedKeys extends s
 }[Extract<keyof O, string>]
 
 export type AuthRules<T extends Record<string, unknown>, R> = {
-  authentication: 'OPEN' | [R[], 'OPEN' | NestedKey<T>[]][]
-  query: [NestedKey<T>, Operations[]][]
-  select: NestedKey<T>[]
-  populate: [string, string[]][]
+  authentication: 'OPEN' | [[R, ...R[]], 'OPEN' | NestedKey<T>[]][]
+  query: {
+    fields: [NestedKey<T>, Operations[]][]
+    additional?: {
+      roles: [R, ...R[]]
+      fields: [NestedKey<T>, Operations[]][]
+    }[]
+  }
+  select: {
+    protected: NestedKey<T>[]
+    default: NestedKey<T>[]
+    additional?: {
+      roles: [R, ...R[]]
+      protected: NestedKey<T>[]
+      default: NestedKey<T>[]
+    }[]
+  }
+  populate: {
+    path: string
+    select: {
+      protected: string[]
+      default: string[]
+      additional?: {
+        roles: [R, ...R[]]
+        protected: string[]
+        default: string[]
+      }[]
+    }
+    populate: AuthRules<T, R>['populate']
+    roles?: [R, ...R[]]
+  }[]
+  pagination?: Partial<Pagination>
   validator?: Validator<T>
-  defaultValue?: {
-    pagination?: Partial<Pagination>
-    select?: NestedKey<T>[]
-    populate?: [string, string[]][]
+  queryType?: {
+    disabled: ('$or' | '$nor')[]
+    additional?: {
+      roles: [R, ...R[]]
+      disabled: ('$or' | '$nor')[]
+    }[]
   }
 }
 
