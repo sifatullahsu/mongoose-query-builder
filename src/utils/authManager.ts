@@ -1,12 +1,6 @@
-import { ReqQuery, TAuthRules, User } from '../types'
+import { AuthManagerFN } from '../types'
 
-export const authManager = (
-  authentication: TAuthRules['authentication'],
-  user: User
-): {
-  auth: 'OPEN' | string[]
-  authQuery: ReqQuery | null
-} => {
+export const authManager: AuthManagerFN = (authentication, user) => {
   const auth =
     authentication === 'OPEN'
       ? 'OPEN'

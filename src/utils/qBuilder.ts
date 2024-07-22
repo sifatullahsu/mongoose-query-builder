@@ -1,11 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { TBuilder } from '../types'
-import { valueHandler } from './valueHandler'
+import { Obj, QBuilderFN } from '../types'
+import { qHandler } from './qHandler'
 
-type TRecord = Record<string, any>
-
-export const builder: TBuilder = (q, user, authRules) => {
-  const result = q.reduce((query: TRecord[], element: TRecord): TRecord[] => {
+export const qBuilder: QBuilderFN = (q, user, authRules) => {
+  const result = q.reduce((query: Obj[], element) => {
     const keys = Object.keys(element)
     const key = keys[0]
     const value = element[key]
@@ -37,7 +34,7 @@ export const builder: TBuilder = (q, user, authRules) => {
         throw new Error(`Empty operation found for key: '${key}'`)
       }
 
-      const result = builder(value, user, authRules)
+      const result = qBuilder(value, user, authRules)
 
       query.push({ [key]: result })
       return query
@@ -61,7 +58,7 @@ export const builder: TBuilder = (q, user, authRules) => {
       throw new Error(`Unauthorized access: '${key}'.`)
     }
 
-    const result = valueHandler({ value, rules, user, authRules })
+    const result = qHandler(value, rules, user, authRules)
 
     query.push({ [key]: result })
     return query

@@ -1,7 +1,7 @@
-import { TSelect } from '../types'
+import { SelectFN } from '../types'
 import { selectFormatter } from '../utils/selectFormatter'
 
-export const select: TSelect = (input = [], user, selectRules) => {
+export const select: SelectFN = (input, user, selectRules) => {
   const { pipe, protectedReturn, defaultReturn } = selectFormatter(user, selectRules)
 
   for (const i of selectRules.protected) {

@@ -1,8 +1,8 @@
-import { PopulateV4, TPopulate } from '../types'
+import { PopulateFN, QueryMaker } from '../types'
 import { select } from './select'
 
-export const populate: TPopulate = (input, user, populateRules) => {
-  const result = input.reduce((prev: PopulateV4[], item) => {
+export const populate: PopulateFN = (input, user, populateRules) => {
+  const result = input.reduce((prev: QueryMaker['populate'], item) => {
     const rules = populateRules.find(i => i.path === item.path)
 
     if (rules && (!rules.roles || (user && rules.roles.includes(user.role)))) {

@@ -1,8 +1,8 @@
-import { TValueHandler } from '../types'
-import { builder } from './builder'
-import { valueValidator } from './valueValidator'
+import { QHandlerFN } from '../types'
+import { qBuilder } from './qBuilder'
+import { qValidator } from './qValidator'
 
-export const valueHandler: TValueHandler = ({ value, rules, user, authRules }) => {
+export const qHandler: QHandlerFN = (value, rules, user, authRules) => {
   const [key, allowedOperators] = rules
 
   const result = value.reduce((initial, item) => {
@@ -27,7 +27,7 @@ export const valueHandler: TValueHandler = ({ value, rules, user, authRules }) =
         throw new Error(`Empty operation found for '${operator}' on '${key}'.`)
       }
       if (operator === '$elemMatch' && !Array.isArray(value[0])) {
-        const result = builder(value, user, authRules).reduce((prev, item) => {
+        const result = qBuilder(value, user, authRules).reduce((prev, item) => {
           for (const key in item) {
             const _key = key.split('.')[1]
 
@@ -44,13 +44,13 @@ export const valueHandler: TValueHandler = ({ value, rules, user, authRules }) =
         return initial
       }
 
-      const result = valueHandler({ value, rules, user, authRules })
+      const result = qHandler(value, rules, user, authRules)
 
       initial[operator] = result
       return initial
     }
 
-    valueValidator({ key, operator, value, rules, user, authRules })
+    qValidator(key, operator, value, rules, user, authRules)
 
     initial[operator] = value
     return initial

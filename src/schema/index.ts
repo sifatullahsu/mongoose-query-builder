@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const operatorSchema = z.enum([
+export const operatorSchema = z.enum([
   '$eq',
   '$ne',
   '$gt',
@@ -105,36 +105,27 @@ export const authRulesSchema = z.object({
   queryType: queryTypeSchema.optional()
 })
 
-export const queryInputSchema = z.object({
-  page: pageSchema.optional(),
-  limit: limitSchema.optional(),
-  skip: skipSchema.optional(),
-  sort: sortSchema.optional(),
-  select: z.array(z.string()).optional(),
+export const inputSchema = z.object({
+  query: z.array(z.any()).default([]),
+  queryType: z.enum(['$and', '$or', '$nor']).default('$and'),
+  select: z.array(z.string().trim()).default([]),
   populate: z
     .array(
       z.object({
-        path: z.string()
+        path: z.string().trim()
         // select:  ------ SELF
         // populate:   ------ SELF
       })
     )
-    .optional(),
-  query: z.array(z.any()).default([]),
-  queryType: z.enum(['$and', '$or', '$nor']).default('$and'),
+    .default([]),
+  pagination: z
+    .object({
+      page: pageSchema.optional(),
+      limit: limitSchema.optional(),
+      skip: skipSchema.optional(),
+      sort: sortSchema.optional()
+    })
+    .partial()
+    .default({}),
   findOne: z.boolean().default(false)
 })
-
-export type AuthRules = z.infer<typeof authRulesSchema>
-export type User = z.infer<typeof userSchema>
-export type QueryInput = z.infer<typeof queryInputSchema>
-
-export const inputValidator = (query: QueryInput, user: User, rules: AuthRules) => {
-  // page, limit, skip, sort, query, select, populate, queryType, findOne
-
-  userSchema.parse(user)
-  authRulesSchema.parse(rules)
-  const result = queryInputSchema.parse(query)
-
-  return result
-}

@@ -3,40 +3,48 @@ import { pagination } from './app/pagination'
 import { populate } from './app/populate'
 import { query } from './app/query'
 import { select } from './app/select'
+import { authRulesSchema, inputSchema, userSchema } from './schema'
 import {
   AuthRules,
-  Pagination,
-  Populate,
-  Query,
+  Input,
+  Operators,
+  PopulateRules,
   QueryExecutor,
+  QueryExecutorFN,
   QueryMaker,
+  QueryMakerFN,
   QueryPagination,
+  QueryPaginationFN,
   QuerySelector,
-  Select,
-  TQueryExecutor,
-  TQueryMaker,
-  TQueryPagination,
-  TQuerySelector
+  QuerySelectorFN
 } from './types'
 
-const queryMaker: TQueryMaker = (q, user, rules) => {
+const queryMaker: QueryMakerFN = ({ input, user, rules }) => {
+  userSchema.parse(user)
+  authRulesSchema.parse(rules)
+  const result = inputSchema.parse(input)
+
   return {
-    query: query(q, user, rules),
-    select: select(q.select, user, rules.select),
-    populate: populate(q.populate, user, rules.populate),
-    pagination: pagination(q, rules?.pagination),
-    findOne: q.findOne as boolean
+    query: query(result, user, rules),
+    select: select(result.select, user, rules.select),
+    populate: populate(result.populate, user, rules.populate),
+    pagination: pagination(result.pagination, rules?.pagination),
+    findOne: result.findOne
   }
 }
 
-const querySelector: TQuerySelector = (q, user, rules) => {
+const querySelector: QuerySelectorFN = ({ input, user, rules }) => {
+  userSchema.parse(user)
+  authRulesSchema.parse(rules)
+  const result = inputSchema.parse(input)
+
   return {
-    select: select(q.select, user, rules.select),
-    populate: populate(q.populate, user, rules.populate)
+    select: select(result.select, user, rules.select),
+    populate: populate(result.populate, user, rules.populate)
   }
 }
 
-const queryPagination: TQueryPagination = ({ page, limit, count }) => {
+const queryPagination: QueryPaginationFN = ({ page, limit, count }) => {
   return {
     current: page,
     total: Math.ceil(count / limit),
@@ -46,8 +54,8 @@ const queryPagination: TQueryPagination = ({ page, limit, count }) => {
   }
 }
 
-const queryExecutor: TQueryExecutor = async function (this: any, q, user, rules, options = {}) {
-  const queryResult = queryMaker(q, user, rules)
+const queryExecutor: QueryExecutorFN = async function (this: any, { input, user, rules, options = {} }) {
+  const queryResult = queryMaker({ input, user, rules })
 
   const { query, pagination, populate, select, findOne } = queryResult
   const { page, limit, skip, sort } = pagination
@@ -81,10 +89,12 @@ const MongooseQueryMaker = (schema: any) => {
 
 export {
   AuthRules,
+  authRulesSchema,
+  Input,
+  inputSchema,
   MongooseQueryMaker,
-  Pagination,
-  Populate,
-  Query,
+  Operators,
+  PopulateRules,
   QueryExecutor,
   queryExecutor,
   QueryMaker,
@@ -93,6 +103,5 @@ export {
   queryPagination,
   QuerySelector,
   querySelector,
-  Select,
-  TQueryExecutor
+  userSchema
 }

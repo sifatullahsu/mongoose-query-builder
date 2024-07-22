@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { TValueValidator } from '../types'
+import { QValidatorFN } from '../types'
 
-export const valueValidator: TValueValidator = ({ key, operator, value, authRules, rules, user }) => {
+export const qValidator: QValidatorFN = (key, operator, value, rules, user, authRules) => {
   if (['$in', '$nin'].includes(operator)) {
     if (!Array.isArray(value)) {
       throw new Error(`Unauthorized value: 'array' required in '${operator}' on '${key}'`)

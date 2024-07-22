@@ -1,10 +1,10 @@
-import { TPagination } from '../types'
+import { PaginationFN } from '../types'
 
-export const pagination: TPagination = (q, paginationRules) => {
-  const page = q?.page || paginationRules?.page || 1
-  const limit = q?.limit || paginationRules?.limit || 20
-  const skip = (q?.skip || paginationRules?.skip || 0) + (page - 1) * limit
-  const sort = q?.sort ? q.sort.replace(/,/g, ' ') : paginationRules?.sort || 'createdAt'
+export const pagination: PaginationFN = (input, paginationRules) => {
+  const page = input?.page || paginationRules?.page || 1
+  const limit = input?.limit || paginationRules?.limit || 20
+  const skip = (input?.skip || paginationRules?.skip || 0) + (page - 1) * limit
+  const sort = input?.sort ? input.sort.replace(/,/g, ' ') : paginationRules?.sort || 'createdAt'
 
   return { page, limit, skip, sort }
 }

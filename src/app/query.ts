@@ -1,17 +1,17 @@
-import { Query, TQuery } from '../types'
+import { Obj, QueryFN } from '../types'
 import { authManager } from '../utils/authManager'
-import { builder } from '../utils/builder'
+import { qBuilder } from '../utils/qBuilder'
 
-export const query: TQuery = (q, user, authRules) => {
+export const query: QueryFN = (input, user, authRules) => {
   const { authQuery } = authManager(authRules.authentication, user)
-  const output = builder(q.query as Query[], user, authRules)
+  const output = qBuilder(input.query, user, authRules)
 
-  const $and: Query[] = authQuery ? [authQuery] : []
+  const $and: Obj[] = authQuery ? [authQuery] : []
 
-  if (q.queryType === '$and') {
+  if (input.queryType === '$and') {
     $and.push(...output)
   } else {
-    $and.push({ [q.queryType as string]: output })
+    $and.push({ [input.queryType]: output })
   }
 
   return $and.length === 0 ? {} : $and.length === 1 ? $and[0] : { $and }

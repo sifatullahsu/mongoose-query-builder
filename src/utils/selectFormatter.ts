@@ -1,6 +1,6 @@
-import { TAuthRules, User } from '../types'
+import { SelectFormatterFN } from '../types'
 
-export const selectFormatter = (user: User, rules: TAuthRules['select']) => {
+export const selectFormatter: SelectFormatterFN = (user, rules) => {
   let p = rules.protected
   let d = rules.default
 
