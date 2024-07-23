@@ -28,7 +28,8 @@
   ],
   "scripts": {
     "build": "tsup",
-    "dev": "ts-node-dev --respawn --transpile-only ./src/index.ts"
+    "dev": "ts-node-dev --respawn --transpile-only ./src/index.ts",
+    "testing": "ts-node-dev --respawn --transpile-only ./src/testing/index.ts"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.9.0",

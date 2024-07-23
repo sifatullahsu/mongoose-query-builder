@@ -39,7 +39,7 @@ export const qValidator: QValidatorFN = (key, operator, value, rules, user, auth
   }
 
   if (authRules.validator) {
-    const result = authRules.validator({ key, operator, value, rules, user })
+    const result = authRules.validator({ key, operator, value, rules: rules[1], user })
 
     if (typeof result !== 'boolean') {
       throw new Error(`Validator function should be return a 'boolean'`)

@@ -78,10 +78,10 @@ export type AuthRules<T extends Record<string, unknown>, R> = {
   pagination?: Partial<QueryMaker['pagination']>
 
   validator?: (data: {
-    key: NestedKey<T>
+    key: string
     operator: Operators
     value: unknown
-    rules: [NestedKey<T>, Operators[]]
+    rules: Operators[]
     user: User
   }) => boolean
 

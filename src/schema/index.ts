@@ -100,7 +100,7 @@ export const authRulesSchema = z.object({
   query: querySchema,
   select: selectSchema,
   populate: populateSchema,
-  pagination: paginationSchema.partial(),
+  pagination: paginationSchema.partial().optional(),
   validator: validatorSchema.optional(),
   queryType: queryTypeSchema.optional()
 })
