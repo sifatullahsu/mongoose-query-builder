@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { AuthRules, Input } from '../types'
 
 export const operatorSchema = z.enum([
   '$eq',
@@ -39,7 +40,7 @@ const querySchema = z.object({
     .array(
       z.object({
         roles: rolesSchema,
-        fields: z.array(fieldSchema) // ------ SELF
+        fields: z.array(fieldSchema)
       })
     )
     .optional()
@@ -57,14 +58,16 @@ const selectSchema = z.object({
     )
     .optional()
 })
-const populateSchema = z.array(
-  z.object({
-    path: z.string(),
-    select: selectSchema.optional(),
-    // populate: populateSchema.optional(),
-    roles: rolesSchema.optional()
-  })
-)
+const populateSchema: z.ZodType<AuthRules<Record<string, unknown>, string>['populate']> = z.lazy(() => {
+  return z.array(
+    z.object({
+      path: z.string(),
+      select: selectSchema,
+      populate: populateSchema,
+      roles: rolesSchema.optional()
+    })
+  )
+})
 const validatorSchema = z.function().returns(z.boolean())
 const queryTypeSchema = z.object({
   disabled: z.array(z.enum(['$or', '$nor'])),
@@ -105,19 +108,23 @@ export const authRulesSchema = z.object({
   queryType: queryTypeSchema.optional()
 })
 
+const inputSelectSchema = z.array(z.string().trim()).default([])
+const inputPopulateSchema: z.ZodType<Input['populate'] | undefined> = z.lazy(() => {
+  return z
+    .array(
+      z.object({
+        path: z.string().trim(),
+        select: inputSelectSchema,
+        populate: inputPopulateSchema
+      })
+    )
+    .default([])
+})
 export const inputSchema = z.object({
   query: z.array(z.any()).default([]),
   queryType: z.enum(['$and', '$or', '$nor']).default('$and'),
-  select: z.array(z.string().trim()).default([]),
-  populate: z
-    .array(
-      z.object({
-        path: z.string().trim()
-        // select:  ------ SELF
-        // populate:   ------ SELF
-      })
-    )
-    .default([]),
+  select: inputSelectSchema,
+  populate: inputPopulateSchema,
   pagination: z
     .object({
       page: pageSchema.optional(),
