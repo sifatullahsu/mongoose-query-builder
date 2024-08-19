@@ -18,7 +18,7 @@ type Pagination = QueryMaker['pagination']
 type Rules = AuthRules<Record<string, unknown>, string>
 type QRules = [string, Operators[]]
 
-export type QueryMakerFN = (data: { input: Partial<Input>; user: User; rules: Rules }) => QueryMaker
+export type QueryMakerFN = (data: { input: Partial<Input>; user: User; key: Key }) => QueryMaker
 export type QuerySelectorFN = (data: { input: Partial<Input>; user: User; rules: Rules }) => QuerySelector
 export type QueryPaginationFN = (data: { page: number; limit: number; count: number }) => QueryPagination
 export type QueryExecutorFN = (data: {
@@ -28,10 +28,15 @@ export type QueryExecutorFN = (data: {
   options?: Obj
 }) => Promise<QueryExecutor>
 
-export type QueryFN = (input: Input, user: User, authRules: Rules) => Query
-export type SelectFN = (input: Input['select'], user: User, rules: Rules['select']) => Select
-export type PopulateFN = (input: Input['populate'], user: User, rules: Rules['populate']) => Populate
-export type PaginationFN = (input: Input['pagination'], rules: Rules['pagination']) => Pagination
+export type QueryFN = (this: TBase, input: Input, user: User, key: Key) => Query
+export type SelectFN = (this: TBase, input: Input['select'], user: User, key: Key | Rules['select']) => Select
+export type PopulateFN = (
+  this: TBase,
+  input: Input['populate'],
+  user: User,
+  key: Key | Rules['populate']
+) => Populate
+export type PaginationFN = (this: TBase, input: Input['pagination'], key: Key) => Pagination
 
 export type AuthManagerFN = (
   authentication: Rules['authentication'],
@@ -60,3 +65,22 @@ export type QValidatorFN = (
   user: User,
   authRules: Rules
 ) => void
+
+export type Key = keyof TBase['registry']
+
+export type TBase = {
+  registry: Record<string, Rules>
+  connection: boolean
+  keys: () => Key[]
+  get: <T extends 'normal' | 'strict' = 'normal'>(
+    key: Key,
+    mode?: T | 'normal' | 'strict'
+  ) => T extends 'strict' ? Rules : Rules | null
+  set: (key: Key, rules: Rules) => Key
+  registerRules: <T extends Rules>(key: Key, rules: T) => Key
+  connect: () => void
+  query: QueryFN
+  select: SelectFN
+  populate: PopulateFN
+  pagination: PaginationFN
+}

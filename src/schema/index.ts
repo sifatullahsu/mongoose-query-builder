@@ -124,7 +124,7 @@ export const inputSchema = z.object({
   query: z.array(z.any()).default([]),
   queryType: z.enum(['$and', '$or', '$nor']).default('$and'),
   select: inputSelectSchema,
-  populate: inputPopulateSchema,
+  populate: inputPopulateSchema.default([]),
   pagination: z
     .object({
       page: pageSchema.optional(),

@@ -1,8 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { pagination } from './app/pagination'
-import { populate } from './app/populate'
-import { query } from './app/query'
-import { select } from './app/select'
+import { connect, instance, registerRules } from './app'
 import { authRulesSchema, inputSchema, userSchema } from './schema'
 import {
   AuthRules,
@@ -15,34 +12,129 @@ import {
   QueryMakerFN,
   QueryPagination,
   QueryPaginationFN,
-  QuerySelector,
-  QuerySelectorFN
+  QuerySelector
 } from './types'
 
-const queryMaker: QueryMakerFN = ({ input, user, rules }) => {
+registerRules('blogs', {
+  authentication: [
+    [['admin'], 'OPEN'],
+    [['subscriber'], ['user']]
+  ],
+  query: {
+    fields: [
+      ['user', ['$eq']],
+      ['category', ['$eq']],
+      ['mentor', ['$eq']],
+      ['status', ['$in']]
+    ]
+  },
+  select: { default: [], protected: ['password'] },
+  populate: [
+    {
+      path: 'mentor',
+      ref: 'mentor',
+      select: { default: [], protected: [] },
+      populate: [
+        {
+          path: 'author',
+          ref: 'author',
+          select: { default: [], protected: [] },
+          populate: [
+            {
+              path: 'name',
+              ref: 'name',
+              select: { default: [], protected: [] },
+              populate: []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      path: 'category',
+      ref: 'category',
+      select: { default: [], protected: [] },
+      populate: []
+    }
+  ]
+})
+
+console.log(
+  instance.query(
+    { query: [{ category: [['$eq', 2]] }, { mentor: [['$eq', 2]] }, { status: [['$in', [2]]] }] },
+    { _id: '', role: 'admin' },
+    'blogs'
+  )
+)
+console.log(instance.pagination({ page: 3 }, 'blogs'))
+console.log(instance.select(['dd', 'password', 'aa'], null, 'blogs'))
+console.log(
+  instance.populate(
+    [
+      {
+        path: 'mentor',
+        select: ['name', 'email'],
+        populate: [
+          {
+            path: 'author',
+            populate: [
+              {
+                path: 'items'
+              }
+            ]
+          }
+        ]
+      },
+      {
+        path: 'category',
+        select: ['title', 'slug']
+      },
+      {
+        path: 'topics',
+        populate: [
+          {
+            path: 'items'
+          }
+        ]
+      }
+    ],
+    null,
+    'blogs'
+  )
+)
+
+const queryMaker: QueryMakerFN = ({ input, user, key }) => {
   userSchema.parse(user)
-  authRulesSchema.parse(rules)
+  // authRulesSchema.parse(rules)
   const result = inputSchema.parse(input)
 
+  // return {
+  //   query: query(result, user, rules),
+  //   select: select(result.select, user, rules.select),
+  //   populate: populate(result.populate, user, rules.populate),
+  //   pagination: pagination(result.pagination, rules?.pagination),
+  //   findOne: result.findOne
+  // }
+
   return {
-    query: query(result, user, rules),
-    select: select(result.select, user, rules.select),
-    populate: populate(result.populate, user, rules.populate),
-    pagination: pagination(result.pagination, rules?.pagination),
+    query: instance.query(result, user, key),
+    select: instance.select(result.select, user, key),
+    populate: instance.populate(result.populate, user, key),
+    pagination: instance.pagination(result.pagination, key),
     findOne: result.findOne
   }
 }
 
-const querySelector: QuerySelectorFN = ({ input, user, rules }) => {
-  userSchema.parse(user)
-  authRulesSchema.parse(rules)
-  const result = inputSchema.parse(input)
+// const querySelector: QuerySelectorFN = ({ input, user, rules }) => {
+//   userSchema.parse(user)
+//   authRulesSchema.parse(rules)
+//   const result = inputSchema.parse(input)
 
-  return {
-    select: select(result.select, user, rules.select),
-    populate: populate(result.populate, user, rules.populate)
-  }
-}
+//   return {
+//     select: select(result.select, user, rules.select),
+//     populate: populate(result.populate, user, rules.populate)
+//   }
+// }
 
 const queryPagination: QueryPaginationFN = ({ page, limit, count }) => {
   return {
@@ -90,6 +182,7 @@ const MongooseQueryMaker = (schema: any) => {
 export {
   AuthRules,
   authRulesSchema,
+  connect,
   Input,
   inputSchema,
   MongooseQueryMaker,
@@ -102,6 +195,7 @@ export {
   QueryPagination,
   queryPagination,
   QuerySelector,
-  querySelector,
+  // querySelector,
+  registerRules,
   userSchema
 }

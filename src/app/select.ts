@@ -1,19 +1,21 @@
 import { SelectFN } from '../types'
 import { selectFormatter } from '../utils/selectFormatter'
 
-export const select: SelectFN = (input, user, selectRules) => {
-  const { pipe, protectedReturn, defaultReturn } = selectFormatter(user, selectRules)
+export const select: SelectFN = function (input, user, key) {
+  const rules = typeof key === 'string' ? this.get(key, 'strict').select : key
 
-  for (const i of selectRules.protected) {
+  const { pipe, protectedReturn, defaultReturn } = selectFormatter(user, rules)
+
+  for (const i of rules.protected) {
     if (i.startsWith(' ') || i.endsWith(' ') || i.startsWith('+') || i.startsWith('-')) {
       throw new Error(`AuthRules: Invalid key '${i}' found in 'authRules.select'`)
     }
   }
-  for (const i of selectRules.default) {
+  for (const i of rules.default) {
     if (i.startsWith(' ') || i.endsWith(' ') || i.startsWith('+') || i.startsWith('-')) {
       throw new Error(`AuthRules: Invalid key '${i}' found in 'authRules.defaultValue.select'`)
     }
-    if (selectRules.protected.includes(i)) {
+    if (rules.protected.includes(i)) {
       throw new Error(`Duplicate key found: '${i}' in 'authRules.defaultValue.select'`)
     }
   }
@@ -26,7 +28,7 @@ export const select: SelectFN = (input, user, selectRules) => {
   let isNegativeId: boolean = false
 
   if (input.length) {
-    if (selectRules.default && selectRules.default.length && input.length === 1 && input[0] === '*') {
+    if (rules.default && rules.default.length && input.length === 1 && input[0] === '*') {
       return protectedReturn
     }
 

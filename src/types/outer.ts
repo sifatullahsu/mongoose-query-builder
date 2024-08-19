@@ -5,6 +5,7 @@ export type QueryMaker = {
   select: string
   populate: {
     path: string
+    // rules: keyof
     select: QueryMaker['select']
     populate: QueryMaker['populate']
   }[]
@@ -70,8 +71,9 @@ export type AuthRules<T extends Record<string, unknown>, R> = {
 
   populate: {
     path: NestedKey<T>
-    select: AuthRules<Record<string, unknown>, R>['select']
-    populate: AuthRules<Record<string, unknown>, R>['populate']
+    ref: string
+    select: AuthRules<Record<string, unknown>, R>['select'] // not implemented
+    populate: AuthRules<Record<string, unknown>, R>['populate'] // not implemented
     roles?: [R, ...R[]]
   }[]
 

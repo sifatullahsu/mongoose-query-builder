@@ -1,15 +1,16 @@
 import { PopulateFN, QueryMaker } from '../types'
-import { select } from './select'
 
-export const populate: PopulateFN = (input, user, populateRules) => {
+export const populate: PopulateFN = function (input, user, key) {
+  const rules = typeof key === 'string' ? this.get(key, 'strict').populate : key
+
   const result = input.reduce((prev: QueryMaker['populate'], item) => {
-    const rules = populateRules.find(i => i.path === item.path)
+    const innerRules = rules.find(i => i.path === item.path)
 
-    if (rules && (!rules.roles || (user && rules.roles.includes(user.role)))) {
+    if (innerRules && (!innerRules.roles || (user && innerRules.roles.includes(user.role)))) {
       const result = {
         path: item.path,
-        select: select(item.select ?? [], user, rules.select),
-        populate: populate(item.populate ?? [], user, rules.populate)
+        select: this.select(item.select ?? [], user, innerRules.select ?? innerRules.ref),
+        populate: this.populate(item.populate ?? [], user, innerRules.populate)
       }
 
       prev.push(result)

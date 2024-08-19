@@ -2,9 +2,13 @@ import { Obj, QueryFN } from '../types'
 import { authManager } from '../utils/authManager'
 import { qBuilder } from '../utils/qBuilder'
 
-export const query: QueryFN = (input, user, authRules) => {
-  const { authQuery } = authManager(authRules.authentication, user)
-  const output = qBuilder(input.query, user, authRules)
+export const query: QueryFN = function (input, user, key) {
+  const rules = this.get(key, 'strict')
+
+  const { authQuery } = authManager(rules.authentication, user)
+  const output = qBuilder(input.query, user, rules)
+
+  console.log(output, 'output')
 
   const $and: Obj[] = authQuery ? [authQuery] : []
 

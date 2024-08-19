@@ -1,10 +1,12 @@
 import { PaginationFN } from '../types'
 
-export const pagination: PaginationFN = (input, paginationRules) => {
-  const page = input?.page || paginationRules?.page || 1
-  const limit = input?.limit || paginationRules?.limit || 20
-  const skip = (input?.skip || paginationRules?.skip || 0) + (page - 1) * limit
-  const sort = input?.sort ? input.sort.replace(/,/g, ' ') : paginationRules?.sort || 'createdAt'
+export const pagination: PaginationFN = function (input, key) {
+  const rules = this.get(key, 'strict').pagination
+
+  const page = input?.page || rules?.page || 1
+  const limit = input?.limit || rules?.limit || 20
+  const skip = (input?.skip || rules?.skip || 0) + (page - 1) * limit
+  const sort = input?.sort ? input.sort.replace(/,/g, ' ') : rules?.sort || 'createdAt'
 
   return { page, limit, skip, sort }
 }
